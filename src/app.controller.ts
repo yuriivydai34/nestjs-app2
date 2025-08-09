@@ -24,10 +24,14 @@ export class AppController {
     return 'Hello World!';
   }
 
-  // @Get('post/:id')
-  // async getPostById(@Param('id') id: string): Promise<PostModel> {
-  //   return this.postService.post({ id: Number(id) });
-  // }
+  @Get('post/:id')
+  async getPostById(@Param('id') id: string): Promise<PostModel> {
+    const post = await this.postService.post({ id: Number(id) });
+    if (!post) {
+      throw new Error(`Post with id ${id} not found`);
+    }
+    return post;
+  }
 
   @Get('feed')
   async getPublishedPosts(): Promise<PostModel[]> {
