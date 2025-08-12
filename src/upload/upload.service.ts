@@ -1,9 +1,12 @@
 import { Injectable } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
+import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class UploadService {
+  constructor(private prisma: PrismaService) { }
+
   async saveFile(file: Express.Multer.File): Promise<{ message: string; path: string }> {
     // Check if file exists and was uploaded successfully
     if (!file) {
@@ -13,6 +16,13 @@ export class UploadService {
     // If using diskStorage (which you are), the file is already saved to disk
     // and file.path contains the path to the saved file
     if (file.path) {
+      await this.prisma.file.create({
+        data: {
+          name: file.originalname,
+          file_path: file.path,
+        },
+      });
+
       return {
         message: 'File uploaded successfully',
         path: file.path,
@@ -22,7 +32,7 @@ export class UploadService {
     // Fallback for memory storage (if file.buffer is available)
     if (file.buffer) {
       const uploadDir = './upload';
-      
+
       if (!fs.existsSync(uploadDir)) {
         fs.mkdirSync(uploadDir, { recursive: true });
       }

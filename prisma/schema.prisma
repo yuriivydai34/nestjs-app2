@@ -19,3 +19,9 @@ model User {
   username  String   @unique
   password  String
 }
+
+model File {
+  id        Int      @id @default(autoincrement())
+  file_path  String   @unique
+  name  String
+}
