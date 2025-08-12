@@ -1,14 +1,13 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { PrismaService } from './prisma.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { MulterModule } from '@nestjs/platform-express/multer';
-import { UploadService } from './upload/upload.service';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { extname, join } from 'path';
 import { diskStorage } from 'multer';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -26,9 +25,10 @@ import { diskStorage } from 'multer';
       }),
     }),
     AuthModule,
-    UsersModule
+    UsersModule,
+    UploadModule
   ],
   controllers: [AppController],
-  providers: [AppService, PrismaService, UploadService],
+  providers: [AppService],
 })
 export class AppModule { }
