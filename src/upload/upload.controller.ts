@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { Public } from '../auth/decorators';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
-import { UploadService } from './upload.service';
+import { UploadService, FileData } from './upload.service';
 
 @Controller('upload')
 export class UploadController {
@@ -19,16 +19,13 @@ export class UploadController {
   @Public()
   @Post()
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File) {
+  async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<{ message: string; data?: FileData }> {
     return await this.uploadService.saveFile(file);
   }
 
   @Public()
   @Get()
   async getFiles() {
-    return {
-      message: 'Files can be uploaded using POST /upload',
-      instructions: 'Use POST /upload to upload a file',
-    };
+    return await this.uploadService.getFiles();
   }
 }

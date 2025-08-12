@@ -21,7 +21,11 @@ model User {
 }
 
 model File {
-  id        Int      @id @default(autoincrement())
-  file_path  String   @unique
-  name  String
+  id            Int      @id @default(autoincrement())
+  filename      String
+  originalName  String
+  size         Int
+  mimetype    String
+  url         String
+  uploadDate  DateTime @default(now())
 }
