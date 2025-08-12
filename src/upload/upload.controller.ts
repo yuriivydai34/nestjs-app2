@@ -1,7 +1,9 @@
 
 import {
   Controller,
+  Delete,
   Get,
+  Param,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -27,5 +29,11 @@ export class UploadController {
   @Get()
   async getFiles() {
     return await this.uploadService.getFiles();
+  }
+
+  @Public()
+  @Delete(':id')
+  async deleteFile(@Param('id') id: string) {
+    return await this.uploadService.deleteFile(+id);
   }
 }
