@@ -11,6 +11,7 @@ import {
 import { UsersService } from './user.service';
 import { PostsService } from './post.service';
 import { User as UserModel, Post as PostModel } from '../generated/prisma/client';
+import { Public } from './auth/decorators';
 
 @Controller()
 export class AppController {
@@ -19,6 +20,7 @@ export class AppController {
     private readonly postService: PostsService,
   ) {}
 
+  @Public()
   @Get()
   getHello(): string {
     return 'Hello World!';
