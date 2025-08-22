@@ -7,7 +7,14 @@ import { PrismaService } from 'src/prisma.service';
 export class TasksService {
   constructor(private prisma: PrismaService) { }
 
-  create(createTaskDto: CreateTaskDto, userIdCreator: number) {
+  async create(createTaskDto: CreateTaskDto, userIdCreator: number) {
+    const userIdAssignee = await this.prisma.user.findUnique({
+      where: { id: createTaskDto.userIdAssignee },
+    });
+    if (!userIdAssignee) {
+      throw new Error(`Assignee with ID ${createTaskDto.userIdAssignee} not found`);
+    }
+
     return this.prisma.task.create({
       data: {
         title: createTaskDto.title,
