@@ -8,19 +8,22 @@ export class CommentsService {
   constructor(private prisma: PrismaService) { }
   
   async create(createCommentDto: CreateCommentDto, userId: number) {
+    // Convert taskId to number to ensure proper type
+    const taskId = Number(createCommentDto.taskId);
+    
     // First check if the task exists
     const task = await this.prisma.task.findUnique({
-      where: { id: createCommentDto.taskId },
+      where: { id: taskId },
     });
 
     if (!task) {
-      throw new NotFoundException(`Task with ID ${createCommentDto.taskId} not found`);
+      throw new NotFoundException(`Task with ID ${taskId} not found`);
     }
 
     return this.prisma.comment.create({
       data: {
         content: createCommentDto.content,
-        taskId: createCommentDto.taskId,
+        taskId: taskId,
         userId,
       },
     });
