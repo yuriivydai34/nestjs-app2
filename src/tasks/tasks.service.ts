@@ -28,6 +28,23 @@ export class TasksService {
     });
   }
 
+  findCreatedByUser(userIdCreator: number) {
+    return this.prisma.task.findMany({
+      where: { userCreator: { id: userIdCreator } },
+    });
+  }
+
+  findByTitle(title: string) {
+    return this.prisma.task.findMany({
+      where: {
+        title: {
+          contains: title,
+          mode: 'insensitive'
+        }
+      },
+    });
+  }
+
   update(id: number, updateTaskDto: UpdateTaskDto) {
     return this.prisma.task.update({
       where: { id },
