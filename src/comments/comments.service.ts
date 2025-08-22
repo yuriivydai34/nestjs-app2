@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { PrismaService } from 'src/prisma.service';
@@ -7,10 +7,20 @@ import { PrismaService } from 'src/prisma.service';
 export class CommentsService {
   constructor(private prisma: PrismaService) { }
   
-  create(createCommentDto: CreateCommentDto, userId: number) {
+  async create(createCommentDto: CreateCommentDto, userId: number) {
+    // First check if the task exists
+    const task = await this.prisma.task.findUnique({
+      where: { id: createCommentDto.taskId },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${createCommentDto.taskId} not found`);
+    }
+
     return this.prisma.comment.create({
       data: {
-        ...createCommentDto,
+        content: createCommentDto.content,
+        taskId: createCommentDto.taskId,
         userId,
       },
     });
