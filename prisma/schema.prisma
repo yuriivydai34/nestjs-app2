@@ -20,6 +20,17 @@ model User {
   password  String
 
   Task Task[]
+
+  UserProfile UserProfile?
+}
+
+model UserProfile {
+  id        Int      @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String   @unique
+  userId    Int      @unique
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Task {

@@ -8,6 +8,7 @@ import { join } from 'path';
 import { UploadModule } from './upload/upload.module';
 import { TasksModule } from './tasks/tasks.module';
 import { CommentsModule } from './comments/comments.module';
+import { UserProfileModule } from './user-profile/user-profile.module';
 
 @Module({
   imports: [
@@ -19,7 +20,8 @@ import { CommentsModule } from './comments/comments.module';
     UsersModule,
     UploadModule,
     TasksModule,
-    CommentsModule
+    CommentsModule,
+    UserProfileModule
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -20,10 +20,18 @@ export class UsersService {
     const saltOrRounds = 10;
     const password = data.password;
     const hash = await bcrypt.hash(password, saltOrRounds);
+    
     return this.prisma.user.create({
       data: {
         ...data,
-        password: hash
+        password: hash,
+        UserProfile: {
+          create: {
+            firstName: 'firstName',
+            lastName: 'lastName',
+            email: 'email@example.com'
+          }
+        }
       }
     });
   }
