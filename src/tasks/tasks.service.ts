@@ -57,9 +57,17 @@ export class TasksService {
     });
   }
 
-  remove(id: number) {
-    return this.prisma.task.delete({
-      where: { id },
+  async remove(id: number) {
+    return this.prisma.$transaction(async (prisma) => {
+      // First delete all comments associated with this task
+      await prisma.comment.deleteMany({
+        where: { taskId: id },
+      });
+
+      // Then delete the task
+      return prisma.task.delete({
+        where: { id },
+      });
     });
   }
 }
