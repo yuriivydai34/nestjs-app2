@@ -32,6 +32,17 @@ model Task {
   userIdCreator  Int
   userCreator    User     @relation(fields: [userIdCreator], references: [id])
   userIdAssignee Int?
+
+  Comment Comment[]
+}
+
+model Comment {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  userId    Int
+  taskId    Int
+  task      Task     @relation(fields: [taskId], references: [id])
 }
 
 model File {

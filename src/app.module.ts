@@ -7,6 +7,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { UploadModule } from './upload/upload.module';
 import { TasksModule } from './tasks/tasks.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { TasksModule } from './tasks/tasks.module';
     AuthModule,
     UsersModule,
     UploadModule,
-    TasksModule
+    TasksModule,
+    CommentsModule
   ],
   controllers: [AppController],
   providers: [AppService],
