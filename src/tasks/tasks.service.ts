@@ -45,8 +45,7 @@ export class TasksService {
     return this.prisma.task.findMany({
       where: {
         title: {
-          contains: title,
-          mode: 'insensitive'
+          contains: title
         }
       },
     });
