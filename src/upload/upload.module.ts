@@ -20,5 +20,6 @@ import { diskStorage } from 'multer';
   ],
   controllers: [UploadController],
   providers: [UploadService, PrismaService],
+  exports: [UploadService],
 })
 export class UploadModule { }

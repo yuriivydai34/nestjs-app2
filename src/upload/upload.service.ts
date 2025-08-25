@@ -92,6 +92,11 @@ export class UploadService {
     return this.prisma.file.findMany({ where: { taskId: taskId } });
   }
 
+  async deleteFilesForTask(taskId: number) {
+    const files = await this.prisma.file.findMany({ where: { taskId } });
+    await Promise.all(files.map(file => this.deleteFile(file.id)));
+  }
+
   async deleteFile(id: number) {
     // Ensure the file exists before attempting to delete
     const file = await this.prisma.file.findUnique({ where: { id } });
