@@ -26,12 +26,6 @@ export class UploadController {
   }
 
   @Public()
-  @Get()
-  async getFiles() {
-    return await this.uploadService.getFiles();
-  }
-
-  @Public()
   @Get(':taskId')
   async getFilesForTask(@Param('taskId') taskId: string) {
     return await this.uploadService.getFilesForTask(+taskId);
