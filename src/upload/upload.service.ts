@@ -16,10 +16,16 @@ export interface FileData {
 export class UploadService {
   constructor(private prisma: PrismaService) { }
 
-  async saveFile(file: Express.Multer.File): Promise<{ message: string; data?: FileData }> {
+  async saveFile(file: Express.Multer.File, taskId: number): Promise<{ message: string; data?: FileData }> {
+    console.log('Saving file:', file.originalname, 'for task:', taskId);
     // Check if file exists and was uploaded successfully
     if (!file) {
       throw new Error('No file uploaded');
+    }
+
+    const task = await this.prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) {
+      throw new Error(`Task with ID ${taskId} not found`);
     }
 
     // If using diskStorage (which you are), the file is already saved to disk
@@ -32,6 +38,9 @@ export class UploadService {
           originalName: file.originalname,
           size: file.size,
           mimetype: file.mimetype,
+          Task: {
+            connect: { id: taskId }
+          }
         },
       });
 
@@ -77,6 +86,10 @@ export class UploadService {
 
   getFiles() {
     return this.prisma.file.findMany();
+  }
+
+  getFilesForTask(taskId: number) {
+    return this.prisma.file.findMany({ where: { taskId: taskId } });
   }
 
   async deleteFile(id: number) {

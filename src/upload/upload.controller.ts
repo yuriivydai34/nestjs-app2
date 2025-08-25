@@ -19,16 +19,22 @@ export class UploadController {
   ) { }
 
   @Public()
-  @Post()
+  @Post(':taskId')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadFile(@UploadedFile() file: Express.Multer.File): Promise<{ message: string; data?: FileData }> {
-    return await this.uploadService.saveFile(file);
+  async uploadFile(@UploadedFile() file: Express.Multer.File, @Param('taskId') taskId: string): Promise<{ message: string; data?: FileData }> {
+    return await this.uploadService.saveFile(file, +taskId);
   }
 
   @Public()
   @Get()
   async getFiles() {
     return await this.uploadService.getFiles();
+  }
+
+  @Public()
+  @Get(':taskId')
+  async getFilesForTask(@Param('taskId') taskId: string) {
+    return await this.uploadService.getFilesForTask(+taskId);
   }
 
   @Public()

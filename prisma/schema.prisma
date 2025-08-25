@@ -15,9 +15,9 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  password  String
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  password String
 
   Task Task[]
 
@@ -25,12 +25,12 @@ model User {
 }
 
 model UserProfile {
-  id        Int      @id @default(autoincrement())
+  id        Int    @id @default(autoincrement())
   firstName String
   lastName  String
-  email     String   @unique
-  userId    Int      @unique
-  user      User     @relation(fields: [userId], references: [id])
+  email     String @unique
+  userId    Int    @unique
+  user      User   @relation(fields: [userId], references: [id])
 }
 
 model Task {
@@ -45,6 +45,8 @@ model Task {
   userIdAssignee Int?
 
   Comment Comment[]
+
+  File File[]
 }
 
 model Comment {
@@ -57,11 +59,14 @@ model Comment {
 }
 
 model File {
-  id            Int      @id @default(autoincrement())
-  filename      String
-  originalName  String
+  id           Int      @id @default(autoincrement())
+  filename     String
+  originalName String
   size         Int
-  mimetype    String
-  url         String
-  uploadDate  DateTime @default(now())
+  mimetype     String
+  url          String
+  uploadDate   DateTime @default(now())
+  taskId       Int
+
+  Task Task @relation(fields: [taskId], references: [id])
 }
