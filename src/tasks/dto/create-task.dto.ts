@@ -11,5 +11,8 @@ export class CreateTaskDto {
     completed: boolean;
 
     @ApiProperty()
-    userIdAssignee: number;
+    userIdSupervisor: number;
+
+    @ApiProperty()
+    userIdAssociate: number;
 }

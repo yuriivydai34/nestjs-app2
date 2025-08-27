@@ -5,6 +5,16 @@ import { PrismaService } from 'src/prisma.service';
 import CreateUserDto from './dto/create';
 import * as bcrypt from 'bcrypt';
 
+export interface UserInterface {
+  id: number;
+  username: string;
+  UserProfile: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
+}
+
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) { }
@@ -34,5 +44,23 @@ export class UsersService {
         }
       }
     });
+  }
+
+  getAll(): Promise<UserInterface[]> {
+    return this.prisma.user.findMany(
+      {
+        select: {
+          id: true,
+          username: true,
+          UserProfile: {
+            select: {
+              firstName: true,
+              lastName: true,
+              email: true
+            }
+          }
+        }
+      }
+    );
   }
 }

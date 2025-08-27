@@ -9,19 +9,27 @@ export class TasksService {
   constructor(private prisma: PrismaService, private uploadService: UploadService) { }
 
   async create(createTaskDto: CreateTaskDto, userIdCreator: number) {
-    const userIdAssignee = await this.prisma.user.findUnique({
-      where: { id: createTaskDto.userIdAssignee },
+    const userIdSupervisor = await this.prisma.user.findUnique({
+      where: { id: createTaskDto.userIdSupervisor },
     });
-    if (!userIdAssignee) {
-      throw new Error(`Assignee with ID ${createTaskDto.userIdAssignee} not found`);
+    if (!userIdSupervisor) {
+      throw new Error(`Supervisor with ID ${createTaskDto.userIdSupervisor} not found`);
+    }
+
+    const userIdAssociate = await this.prisma.user.findUnique({
+      where: { id: createTaskDto.userIdAssociate },
+    });
+    if (!userIdAssociate) {
+      throw new Error(`Associate with ID ${createTaskDto.userIdAssociate} not found`);
     }
 
     return this.prisma.task.create({
       data: {
         title: createTaskDto.title,
         description: createTaskDto.description,
-        userCreator: { connect: { id: userIdCreator } },
-        userIdAssignee: createTaskDto.userIdAssignee,
+        userIdCreator: userIdCreator,
+        userIdAssociate: createTaskDto.userIdAssociate,
+        userIdSupervisor: createTaskDto.userIdSupervisor,
       },
     });
   }
@@ -38,7 +46,19 @@ export class TasksService {
 
   findCreatedByUser(userIdCreator: number) {
     return this.prisma.task.findMany({
-      where: { userCreator: { id: userIdCreator } },
+      where: { userIdCreator },
+    });
+  }
+
+  findAssociatedToUser(userIdAssociate: number) {
+    return this.prisma.task.findMany({
+      where: { userIdAssociate },
+    });
+  }
+
+  findSupervisedByUser(userIdSupervisor: number) {
+    return this.prisma.task.findMany({
+      where: { userIdSupervisor },
     });
   }
 
@@ -52,14 +72,33 @@ export class TasksService {
     });
   }
 
-  update(id: number, updateTaskDto: UpdateTaskDto) {
+  async update(id: number, updateTaskDto: UpdateTaskDto) {
+    if (updateTaskDto.userIdSupervisor) {
+      const userIdSupervisor = await this.prisma.user.findUnique({
+        where: { id: updateTaskDto.userIdSupervisor },
+      });
+      if (!userIdSupervisor) {
+        throw new Error(`Supervisor with ID ${updateTaskDto.userIdSupervisor} not found`);
+      }
+    }
+
+    if (updateTaskDto.userIdAssociate) {
+      const userIdAssociate = await this.prisma.user.findUnique({
+        where: { id: updateTaskDto.userIdAssociate },
+      });
+      if (!userIdAssociate) {
+        throw new Error(`Associate with ID ${updateTaskDto.userIdAssociate} not found`);
+      }
+    }
+
     return this.prisma.task.update({
       where: { id },
       data: {
         title: updateTaskDto.title,
         description: updateTaskDto.description,
         completed: updateTaskDto.completed,
-        userIdAssignee: updateTaskDto.userIdAssignee,
+        userIdSupervisor: updateTaskDto.userIdSupervisor,
+        userIdAssociate: updateTaskDto.userIdAssociate,
       },
     });
   }

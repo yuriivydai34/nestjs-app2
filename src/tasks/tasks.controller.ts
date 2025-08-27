@@ -32,6 +32,16 @@ export class TasksController {
     return this.tasksService.findCreatedByUser(+userIdCreator);
   }
 
+  @Get('associated-to/:userIdAssociate')
+  findAssociatedToUser(@Param('userIdAssociate') userIdAssociate: string) {
+    return this.tasksService.findAssociatedToUser(+userIdAssociate);
+  }
+
+  @Get('supervised-by/:userIdSupervisor')
+  findSupervisedByUser(@Param('userIdSupervisor') userIdSupervisor: string) {
+    return this.tasksService.findSupervisedByUser(+userIdSupervisor);
+  }
+
   @Get('by-title/:title')
   findByTitle(@Param('title') title: string) {
     return this.tasksService.findByTitle(title);
