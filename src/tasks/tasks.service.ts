@@ -34,31 +34,27 @@ export class TasksService {
     });
   }
 
-  findAll() {
-    return this.prisma.task.findMany();
+  findAll(userId: number) {
+    return this.prisma.task.findMany(
+      {
+        where: {
+          OR: [{
+            userIdCreator: userId
+          },
+          {
+            userIdAssociate: userId
+          },
+          {
+            userIdSupervisor: userId
+          }]
+        }
+      }
+    );
   }
 
   findOne(id: number) {
     return this.prisma.task.findUnique({
       where: { id },
-    });
-  }
-
-  findCreatedByUser(userIdCreator: number) {
-    return this.prisma.task.findMany({
-      where: { userIdCreator },
-    });
-  }
-
-  findAssociatedToUser(userIdAssociate: number) {
-    return this.prisma.task.findMany({
-      where: { userIdAssociate },
-    });
-  }
-
-  findSupervisedByUser(userIdSupervisor: number) {
-    return this.prisma.task.findMany({
-      where: { userIdSupervisor },
     });
   }
 
