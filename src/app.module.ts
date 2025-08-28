@@ -10,6 +10,7 @@ import { TasksModule } from './tasks/tasks.module';
 import { CommentsModule } from './comments/comments.module';
 import { UserProfileModule } from './user-profile/user-profile.module';
 import { MessageModule } from './message/message.module';
+import { NotificationModule } from './notification/notification.module';
 
 @Module({
   imports: [
@@ -23,7 +24,8 @@ import { MessageModule } from './message/message.module';
     TasksModule,
     CommentsModule,
     UserProfileModule,
-    MessageModule
+    MessageModule,
+    NotificationModule
   ],
   controllers: [AppController],
   providers: [AppService],
