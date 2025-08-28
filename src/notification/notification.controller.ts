@@ -11,7 +11,7 @@ export class NotificationController {
   }
 
   @Put()
-  update(@Request() req, @Body() ids: number[]) {
-    return this.notificationService.update(+req.user.sub, ids);
+  update(@Request() req, @Body() ids: { ids: number[] }) {
+    return this.notificationService.update(+req.user.sub, ids.ids);
   }
 }
