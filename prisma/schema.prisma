@@ -68,3 +68,11 @@ model File {
 
   Task Task @relation(fields: [taskId], references: [id])
 }
+
+model Message {
+  id        Int      @id @default(autoincrement())
+  content   String
+  createdAt DateTime @default(now())
+  senderId  Int
+  receiverId Int
+}

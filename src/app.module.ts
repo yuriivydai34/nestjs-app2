@@ -9,6 +9,7 @@ import { UploadModule } from './upload/upload.module';
 import { TasksModule } from './tasks/tasks.module';
 import { CommentsModule } from './comments/comments.module';
 import { UserProfileModule } from './user-profile/user-profile.module';
+import { MessageModule } from './message/message.module';
 
 @Module({
   imports: [
@@ -21,7 +22,8 @@ import { UserProfileModule } from './user-profile/user-profile.module';
     UploadModule,
     TasksModule,
     CommentsModule,
-    UserProfileModule
+    UserProfileModule,
+    MessageModule
   ],
   controllers: [AppController],
   providers: [AppService],
