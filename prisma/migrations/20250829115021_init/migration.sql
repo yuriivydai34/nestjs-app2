@@ -27,7 +27,8 @@ CREATE TABLE "public"."Task" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "userIdCreator" INTEGER NOT NULL,
-    "userIdAssignee" INTEGER,
+    "userIdSupervisor" INTEGER,
+    "userIdAssociate" INTEGER,
 
     CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
 );
@@ -44,7 +45,7 @@ CREATE TABLE "public"."Comment" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."File" (
+CREATE TABLE "public"."TaskFile" (
     "id" SERIAL NOT NULL,
     "filename" TEXT NOT NULL,
     "originalName" TEXT NOT NULL,
@@ -54,14 +55,33 @@ CREATE TABLE "public"."File" (
     "uploadDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "taskId" INTEGER NOT NULL,
 
-    CONSTRAINT "File_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "TaskFile_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Message" (
+    "id" SERIAL NOT NULL,
+    "content" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "senderId" INTEGER NOT NULL,
+    "receiverId" INTEGER NOT NULL,
+
+    CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."Notification" (
+    "id" SERIAL NOT NULL,
+    "content" TEXT NOT NULL,
+    "read" BOOLEAN NOT NULL DEFAULT false,
+    "userId" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "public"."User"("username");
-
--- CreateIndex
-CREATE UNIQUE INDEX "UserProfile_email_key" ON "public"."UserProfile"("email");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "UserProfile_userId_key" ON "public"."UserProfile"("userId");
@@ -70,10 +90,7 @@ CREATE UNIQUE INDEX "UserProfile_userId_key" ON "public"."UserProfile"("userId")
 ALTER TABLE "public"."UserProfile" ADD CONSTRAINT "UserProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."Task" ADD CONSTRAINT "Task_userIdCreator_fkey" FOREIGN KEY ("userIdCreator") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "public"."Comment" ADD CONSTRAINT "Comment_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "public"."Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."File" ADD CONSTRAINT "File_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "public"."Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "public"."TaskFile" ADD CONSTRAINT "TaskFile_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "public"."Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
