@@ -10,29 +10,29 @@ import {
 } from '@nestjs/common';
 import { Public } from '../auth/decorators';
 import { FileInterceptor } from '@nestjs/platform-express/multer';
-import { UploadService, FileData } from './upload.service';
+import { TaskUploadService, FileData } from './task-upload.service';
 
-@Controller('upload')
-export class UploadController {
+@Controller('task-upload')
+export class TaskUploadController {
   constructor(
-    private readonly uploadService: UploadService,
+    private readonly uploadService: TaskUploadService,
   ) { }
 
   @Public()
-  @Post('for-task/:taskId')
+  @Post(':taskId')
   @UseInterceptors(FileInterceptor('file'))
   async uploadFileForTask(@UploadedFile() file: Express.Multer.File, @Param('taskId') taskId: string): Promise<{ message: string; data?: FileData }> {
     return await this.uploadService.saveFile(file, +taskId);
   }
 
   @Public()
-  @Get('for-task/:taskId')
+  @Get(':taskId')
   async getFilesForTask(@Param('taskId') taskId: string) {
     return await this.uploadService.getFilesForTask(+taskId);
   }
 
   @Public()
-  @Delete('for-task/:id')
+  @Delete(':id')
   async deleteFile(@Param('id') id: string) {
     return await this.uploadService.deleteFile(+id);
   }

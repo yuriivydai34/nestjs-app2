@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { PrismaService } from 'src/prisma.service';
-import { UploadService } from 'src/upload/upload.service';
+import { TaskUploadService } from 'src/task-upload/task-upload.service';
 
 @Injectable()
 export class TasksService {
-  constructor(private prisma: PrismaService, private uploadService: UploadService) { }
+  constructor(private prisma: PrismaService, private taskUploadService: TaskUploadService) { }
 
   async create(createTaskDto: CreateTaskDto, userIdCreator: number) {
     const userIdSupervisor = await this.prisma.user.findUnique({
@@ -106,7 +106,7 @@ export class TasksService {
         where: { taskId: id },
       });
 
-      await this.uploadService.deleteFilesForTask(id);
+      await this.taskUploadService.deleteFilesForTask(id);
 
       // Then delete the task
       return prisma.task.delete({

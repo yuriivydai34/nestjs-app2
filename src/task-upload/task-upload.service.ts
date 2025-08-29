@@ -13,7 +13,7 @@ export interface FileData {
 }
 
 @Injectable()
-export class UploadService {
+export class TaskUploadService {
   constructor(private prisma: PrismaService) { }
 
   async saveFile(file: Express.Multer.File, taskId: number): Promise<{ message: string; data?: FileData }> {

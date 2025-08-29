@@ -5,7 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { UploadModule } from './upload/upload.module';
+import { TaskUploadModule } from './task-upload/task-upload.module';
 import { TasksModule } from './tasks/tasks.module';
 import { CommentsModule } from './comments/comments.module';
 import { UserProfileModule } from './user-profile/user-profile.module';
@@ -20,7 +20,7 @@ import { NotificationModule } from './notification/notification.module';
     }),
     AuthModule,
     UsersModule,
-    UploadModule,
+    TaskUploadModule,
     TasksModule,
     CommentsModule,
     UserProfileModule,
