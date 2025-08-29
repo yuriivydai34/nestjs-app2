@@ -32,7 +32,7 @@ export class UploadController {
   }
 
   @Public()
-  @Delete(':id')
+  @Delete('for-task/:id')
   async deleteFile(@Param('id') id: string) {
     return await this.uploadService.deleteFile(+id);
   }

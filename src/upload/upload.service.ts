@@ -17,7 +17,6 @@ export class UploadService {
   constructor(private prisma: PrismaService) { }
 
   async saveFile(file: Express.Multer.File, taskId: number): Promise<{ message: string; data?: FileData }> {
-    console.log('Saving file:', file.originalname, 'for task:', taskId);
     // Check if file exists and was uploaded successfully
     if (!file) {
       throw new Error('No file uploaded');
@@ -31,7 +30,7 @@ export class UploadService {
     // If using diskStorage (which you are), the file is already saved to disk
     // and file.path contains the path to the saved file
     if (file.path) {
-      await this.prisma.file.create({
+      await this.prisma.taskFile.create({
         data: {
           filename: file.path.split('upload/')[1],
           url: file.path,
@@ -85,21 +84,21 @@ export class UploadService {
   }
 
   getFiles() {
-    return this.prisma.file.findMany();
+    return this.prisma.taskFile.findMany();
   }
 
   getFilesForTask(taskId: number) {
-    return this.prisma.file.findMany({ where: { taskId: taskId } });
+    return this.prisma.taskFile.findMany({ where: { taskId: taskId } });
   }
 
   async deleteFilesForTask(taskId: number) {
-    const files = await this.prisma.file.findMany({ where: { taskId } });
+    const files = await this.prisma.taskFile.findMany({ where: { taskId } });
     await Promise.all(files.map(file => this.deleteFile(file.id)));
   }
 
   async deleteFile(id: number) {
     // Ensure the file exists before attempting to delete
-    const file = await this.prisma.file.findUnique({ where: { id } });
+    const file = await this.prisma.taskFile.findUnique({ where: { id } });
     if (!file) {
       throw new Error(`File with ID ${id} not found`);
     }
@@ -113,7 +112,7 @@ export class UploadService {
     }
 
     // Delete the file record from the database
-    await this.prisma.file.delete({ where: { id } });
+    await this.prisma.taskFile.delete({ where: { id } });
 
     return { message: 'File deleted successfully' };
   }
