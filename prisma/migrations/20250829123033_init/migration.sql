@@ -59,6 +59,20 @@ CREATE TABLE "public"."TaskFile" (
 );
 
 -- CreateTable
+CREATE TABLE "public"."CommentFile" (
+    "id" SERIAL NOT NULL,
+    "filename" TEXT NOT NULL,
+    "originalName" TEXT NOT NULL,
+    "size" INTEGER NOT NULL,
+    "mimetype" TEXT NOT NULL,
+    "url" TEXT NOT NULL,
+    "uploadDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "commentId" INTEGER NOT NULL,
+
+    CONSTRAINT "CommentFile_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "public"."Message" (
     "id" SERIAL NOT NULL,
     "content" TEXT NOT NULL,
@@ -94,3 +108,6 @@ ALTER TABLE "public"."Comment" ADD CONSTRAINT "Comment_taskId_fkey" FOREIGN KEY 
 
 -- AddForeignKey
 ALTER TABLE "public"."TaskFile" ADD CONSTRAINT "TaskFile_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "public"."Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."CommentFile" ADD CONSTRAINT "CommentFile_commentId_fkey" FOREIGN KEY ("commentId") REFERENCES "public"."Comment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

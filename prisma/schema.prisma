@@ -54,6 +54,8 @@ model Comment {
   userId    Int
   taskId    Int
   task      Task     @relation(fields: [taskId], references: [id])
+
+  CommentFile CommentFile[]
 }
 
 model TaskFile {
@@ -67,6 +69,19 @@ model TaskFile {
   taskId       Int
 
   Task Task @relation(fields: [taskId], references: [id])
+}
+
+model CommentFile {
+  id           Int      @id @default(autoincrement())
+  filename     String
+  originalName String
+  size         Int
+  mimetype     String
+  url          String
+  uploadDate   DateTime @default(now())
+  commentId       Int
+
+  Comment Comment @relation(fields: [commentId], references: [id])
 }
 
 model Message {
