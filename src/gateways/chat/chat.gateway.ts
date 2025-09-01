@@ -8,6 +8,8 @@ type MessageData = {
   receiverId: number;
 };
 
+let clients: { [key: string]: number } = {}; // Mapping of socket.id to userId
+
 @WebSocketGateway({ cors: true }) // Configure CORS if needed
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer() server: Server;
@@ -19,10 +21,15 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
   }
 
   handleConnection(client: Socket, ...args: any[]) {
-    console.log(`Client connected: ${client.id}`);
+    if (client.handshake.auth.userId) {
+      clients[client.id] = client.handshake.auth.userId;
+      console.log(`Client connected: ${client.id}, userId: ${client.handshake.auth.userId}`);
+      console.log(clients);
+    }
   }
 
   handleDisconnect(client: Socket) {
+    delete clients[client.id];
     console.log(`Client disconnected: ${client.id}`);
   }
 
@@ -32,7 +39,10 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
     await this.messageService.create(data);
 
-    this.server.emit('receiveMessage', data); // Emit to all connected clients
+    await this.sendPrivateMessage('receiveMessage', data, [
+      data.receiverId.toString(), 
+      data.senderId.toString()
+    ]); // Emit to the clients
   }
 
   // Method to send a message from a service or controller
@@ -44,5 +54,17 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
       // Send to all connected clients
       this.server.emit(event, payload);
     }
+  }
+
+  async sendPrivateMessage(event: string, payload: any, clientIds: string[]): Promise<void> {
+    console.log(clients);
+    clientIds.forEach(clientId => {
+      const clientKey = Object.keys(clients).find(key => clients[key] === parseInt(clientId));
+      console.log(`Sending private message to client: ${clientKey}`);
+      if (clientKey) {
+        this.server.to(clientKey).emit(event, payload);
+      }
+    });
+    console.log(`Private message sent: ${event}, ${JSON.stringify(payload)}, to: ${clientIds.join(', ')}`);
   }
 }
