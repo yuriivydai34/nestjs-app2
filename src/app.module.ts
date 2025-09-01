@@ -12,6 +12,7 @@ import { UserProfileModule } from './user-profile/user-profile.module';
 import { MessageModule } from './message/message.module';
 import { NotificationModule } from './notification/notification.module';
 import { CommentUploadModule } from './comment-upload/comment-upload.module';
+import { ChatGateway } from './chat/chat.gateway';
 
 @Module({
   imports: [
@@ -30,6 +31,6 @@ import { CommentUploadModule } from './comment-upload/comment-upload.module';
     NotificationModule
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ChatGateway],
 })
 export class AppModule { }
