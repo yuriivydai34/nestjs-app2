@@ -6,12 +6,9 @@ import { PrismaService } from 'src/prisma.service';
 export class MessageService {
   constructor(private prisma: PrismaService) {}
 
-  create(createMessageDto: CreateMessageDto, userId: number) {
+  create(createMessageDto: CreateMessageDto) {
     return this.prisma.message.create({
-      data: {
-        ...createMessageDto,
-        senderId: userId,
-      },
+      data: createMessageDto,
     });
   }
 

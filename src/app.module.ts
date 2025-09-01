@@ -12,7 +12,9 @@ import { UserProfileModule } from './user-profile/user-profile.module';
 import { MessageModule } from './message/message.module';
 import { NotificationModule } from './notification/notification.module';
 import { CommentUploadModule } from './comment-upload/comment-upload.module';
-import { ChatGateway } from './chat/chat.gateway';
+import { ChatGateway } from './gateways/chat/chat.gateway';
+import { MessageService } from './message/message.service';
+import { PrismaService } from './prisma.service';
 
 @Module({
   imports: [
@@ -31,6 +33,6 @@ import { ChatGateway } from './chat/chat.gateway';
     NotificationModule
   ],
   controllers: [AppController],
-  providers: [AppService, ChatGateway],
+  providers: [AppService, MessageService, PrismaService, ChatGateway],
 })
 export class AppModule { }
