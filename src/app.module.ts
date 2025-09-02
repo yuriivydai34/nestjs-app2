@@ -15,6 +15,7 @@ import { CommentUploadModule } from './comment-upload/comment-upload.module';
 import { ChatGateway } from './gateways/chat/chat.gateway';
 import { MessageService } from './message/message.service';
 import { PrismaService } from './prisma.service';
+import { TaskTemplateModule } from './task-template/task-template.module';
 
 @Module({
   imports: [
@@ -30,7 +31,8 @@ import { PrismaService } from './prisma.service';
     CommentsModule,
     UserProfileModule,
     MessageModule,
-    NotificationModule
+    NotificationModule,
+    TaskTemplateModule
   ],
   controllers: [AppController],
   providers: [AppService, MessageService, PrismaService, ChatGateway],
