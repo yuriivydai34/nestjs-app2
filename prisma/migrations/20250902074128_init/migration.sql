@@ -24,6 +24,7 @@ CREATE TABLE "public"."Task" (
     "title" TEXT NOT NULL,
     "description" TEXT,
     "completed" BOOLEAN NOT NULL DEFAULT false,
+    "deadline" TIMESTAMP(3) NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "userIdCreator" INTEGER NOT NULL,

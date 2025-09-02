@@ -27,6 +27,7 @@ export class TasksService {
       data: {
         title: createTaskDto.title,
         description: createTaskDto.description,
+        deadline: createTaskDto.deadline,
         userIdCreator: userIdCreator,
         userIdAssociate: createTaskDto.userIdAssociate,
         userIdSupervisor: createTaskDto.userIdSupervisor,
@@ -92,6 +93,7 @@ export class TasksService {
       data: {
         title: updateTaskDto.title,
         description: updateTaskDto.description,
+        deadline: updateTaskDto.deadline,
         completed: updateTaskDto.completed,
         userIdSupervisor: updateTaskDto.userIdSupervisor,
         userIdAssociate: updateTaskDto.userIdAssociate,

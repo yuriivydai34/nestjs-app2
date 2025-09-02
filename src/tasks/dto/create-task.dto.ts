@@ -11,6 +11,9 @@ export class CreateTaskDto {
     completed: boolean;
 
     @ApiProperty()
+    deadline: Date;
+
+    @ApiProperty()
     userIdSupervisor: number;
 
     @ApiProperty()
