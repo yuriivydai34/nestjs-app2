@@ -3,6 +3,7 @@ CREATE TABLE "public"."User" (
     "id" SERIAL NOT NULL,
     "username" TEXT NOT NULL,
     "password" TEXT NOT NULL,
+    "role" TEXT DEFAULT 'user',
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
@@ -93,6 +94,17 @@ CREATE TABLE "public"."Notification" (
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "Notification_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."TaskTemplate" (
+    "id" SERIAL NOT NULL,
+    "title" TEXT NOT NULL,
+    "description" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "TaskTemplate_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateIndex
