@@ -29,7 +29,7 @@ CREATE TABLE "public"."Task" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
     "userIdCreator" INTEGER NOT NULL,
     "userIdSupervisor" INTEGER,
-    "userIdAssociate" INTEGER,
+    "usersIdAssociate" INTEGER[],
 
     CONSTRAINT "Task_pkey" PRIMARY KEY ("id")
 );

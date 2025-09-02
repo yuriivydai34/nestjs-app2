@@ -17,5 +17,5 @@ export class CreateTaskDto {
     userIdSupervisor: number;
 
     @ApiProperty()
-    userIdAssociate: number;
+    usersIdAssociate: number[];
 }

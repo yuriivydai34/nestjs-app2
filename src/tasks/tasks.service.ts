@@ -16,11 +16,11 @@ export class TasksService {
       throw new Error(`Supervisor with ID ${createTaskDto.userIdSupervisor} not found`);
     }
 
-    const userIdAssociate = await this.prisma.user.findUnique({
-      where: { id: createTaskDto.userIdAssociate },
+    const usersIdAssociate = await this.prisma.user.findMany({
+      where: { id: { in: createTaskDto.usersIdAssociate } },
     });
-    if (!userIdAssociate) {
-      throw new Error(`Associate with ID ${createTaskDto.userIdAssociate} not found`);
+    if (usersIdAssociate.length !== createTaskDto.usersIdAssociate.length) {
+      throw new Error(`Some associates not found`);
     }
 
     return this.prisma.task.create({
@@ -29,7 +29,7 @@ export class TasksService {
         description: createTaskDto.description,
         deadline: createTaskDto.deadline,
         userIdCreator: userIdCreator,
-        userIdAssociate: createTaskDto.userIdAssociate,
+        usersIdAssociate: createTaskDto.usersIdAssociate,
         userIdSupervisor: createTaskDto.userIdSupervisor,
       },
     });
@@ -43,7 +43,9 @@ export class TasksService {
             userIdCreator: userId
           },
           {
-            userIdAssociate: userId
+            usersIdAssociate: {
+              hasSome: [userId]
+            }
           },
           {
             userIdSupervisor: userId
@@ -79,12 +81,12 @@ export class TasksService {
       }
     }
 
-    if (updateTaskDto.userIdAssociate) {
-      const userIdAssociate = await this.prisma.user.findUnique({
-        where: { id: updateTaskDto.userIdAssociate },
+    if (updateTaskDto.usersIdAssociate) {
+      const usersIdAssociate = await this.prisma.user.findMany({
+        where: { id: { in: updateTaskDto.usersIdAssociate } },
       });
-      if (!userIdAssociate) {
-        throw new Error(`Associate with ID ${updateTaskDto.userIdAssociate} not found`);
+      if (usersIdAssociate.length !== updateTaskDto.usersIdAssociate.length) {
+        throw new Error(`Some associates not found`);
       }
     }
 
@@ -96,7 +98,7 @@ export class TasksService {
         deadline: updateTaskDto.deadline,
         completed: updateTaskDto.completed,
         userIdSupervisor: updateTaskDto.userIdSupervisor,
-        userIdAssociate: updateTaskDto.userIdAssociate,
+        usersIdAssociate: updateTaskDto.usersIdAssociate,
       },
     });
   }

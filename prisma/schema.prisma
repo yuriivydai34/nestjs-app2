@@ -41,7 +41,7 @@ model Task {
   updatedAt      DateTime @updatedAt
   userIdCreator  Int
   userIdSupervisor Int?
-  userIdAssociate Int?
+  usersIdAssociate Int[]
   
   Comment Comment[]
 
