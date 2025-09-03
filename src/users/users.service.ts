@@ -26,11 +26,23 @@ export class UsersService {
     return user ?? undefined;
   }
 
+  findById(userId: number) {
+    return this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+  }
+
+  findByIds(userIds: number[]) {
+    return this.prisma.user.findMany({
+      where: { id: { in: userIds } },
+    });
+  }
+
   async create(data: CreateUserDto): Promise<User> {
     const saltOrRounds = 10;
     const password = data.password;
     const hash = await bcrypt.hash(password, saltOrRounds);
-    
+
     return this.prisma.user.create({
       data: {
         ...data,

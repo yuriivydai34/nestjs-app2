@@ -3,10 +3,15 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { PrismaService } from 'src/prisma.service';
 import { TaskUploadService } from 'src/task-upload/task-upload.service';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class TasksService {
-  constructor(private prisma: PrismaService, private taskUploadService: TaskUploadService) { }
+  constructor(
+    private prisma: PrismaService,
+    private taskUploadService: TaskUploadService,
+    private notificationService: NotificationService,
+  ) {}
 
   async create(createTaskDto: CreateTaskDto, userIdCreator: number) {
     const userIdSupervisor = await this.prisma.user.findUnique({
@@ -22,6 +27,13 @@ export class TasksService {
     if (usersIdAssociate.length !== createTaskDto.usersIdAssociate.length) {
       throw new Error(`Some associates not found`);
     }
+
+    this.notificationService.sendTaskCreatedNotification({
+      title: createTaskDto.title,
+      userIdCreator: userIdCreator,
+      userIdSupervisor: createTaskDto.userIdSupervisor,
+      usersIdAssociate: createTaskDto.usersIdAssociate,
+    });
 
     return this.prisma.task.create({
       data: {
