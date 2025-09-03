@@ -65,4 +65,34 @@ export class NotificationService {
       });
     }
   }
+
+  async sendCommentCreatedNotification(taskId: number, userId: number) {
+    const task = await this.prismaService.task.findUnique({
+      where: { id: Number(taskId) },
+    });
+
+    if (!task) throw new Error('Task not found');
+
+    let content = `New comment created: \Task: ${task.title}`;
+    const userCreator = await this.usersService.findById(userId);
+
+    if (!userCreator) throw new Error('User creator not found');
+
+    content += `\nCreatedBy: ${userCreator.username}`;
+
+    if (task.userIdSupervisor === null || task.userIdSupervisor === undefined) {
+      throw new Error('Task supervisor ID is missing');
+    }
+    const userSupervisor = await this.usersService.findById(task.userIdSupervisor);
+    if (!userSupervisor) throw new Error('User supervisor not found');
+
+    content += `\nSupervisor: ${userSupervisor.username}`;
+
+    await this.prismaService.notification.create({
+      data: {
+        content,
+        userId: userSupervisor.id
+      }
+    });
+  }
 }

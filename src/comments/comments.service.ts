@@ -2,15 +2,19 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { PrismaService } from 'src/prisma.service';
+import { NotificationService } from 'src/notification/notification.service';
 
 @Injectable()
 export class CommentsService {
-  constructor(private prisma: PrismaService) { }
-  
+  constructor(
+    private prisma: PrismaService,
+    private notificationService: NotificationService
+  ) { }
+
   async create(createCommentDto: CreateCommentDto, userId: number) {
     // Convert taskId to number to ensure proper type
     const taskId = Number(createCommentDto.taskId);
-    
+
     // First check if the task exists
     const task = await this.prisma.task.findUnique({
       where: { id: taskId },
@@ -19,6 +23,8 @@ export class CommentsService {
     if (!task) {
       throw new NotFoundException(`Task with ID ${taskId} not found`);
     }
+
+    await this.notificationService.sendCommentCreatedNotification(createCommentDto.taskId, userId);
 
     return this.prisma.comment.create({
       data: {
