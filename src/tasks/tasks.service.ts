@@ -82,8 +82,8 @@ export class TasksService {
       },
     });
   }
-
-  async update(id: number, updateTaskDto: UpdateTaskDto) {
+ß
+  async update(id: number, updateTaskDto: UpdateTaskDto, userId: number) {
     if (updateTaskDto.userIdSupervisor) {
       const userIdSupervisor = await this.prisma.user.findUnique({
         where: { id: updateTaskDto.userIdSupervisor },
@@ -101,6 +101,9 @@ export class TasksService {
         throw new Error(`Some associates not found`);
       }
     }
+
+    
+    await this.notificationService.sendTaskUpdatedNotification(id, userId);
 
     return this.prisma.task.update({
       where: { id },

@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'; // or '@prisma/client' if you use
 const prisma = new PrismaClient();
 
 async function main() {
+  // pass123
   const passwordHash = '$2b$10$DhFAQWDezqr/jfVpWd33M.ljBCEUC7ahpTTynVJYI1jbQzoVuGR0i';
   const userProfile = {
     create: {
@@ -13,7 +14,6 @@ async function main() {
   };
 
   // Seed users
-  // pass123
   await prisma.user.create({
     data: {
       username: 'admin',

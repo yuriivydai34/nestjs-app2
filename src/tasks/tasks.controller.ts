@@ -33,8 +33,8 @@ export class TasksController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto) {
-    return this.tasksService.update(+id, updateTaskDto);
+  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto, @Request() req) {
+    return this.tasksService.update(+id, updateTaskDto, req.user.sub);
   }
 
   @Delete(':id')
