@@ -84,6 +84,17 @@ export class TasksService {
   }
 ß
   async update(id: number, updateTaskDto: UpdateTaskDto, userId: number) {
+    const existingTask = await this.prisma.task.findUnique({
+      where: { id },
+    });
+    if (!existingTask) {
+      throw new Error(`Task with ID ${id} not found`);
+    }
+
+    if (existingTask.userIdCreator !== userId && existingTask.userIdSupervisor !== userId) {
+      throw new Error(`You do not have permission to update this task`);
+    }
+
     if (updateTaskDto.userIdSupervisor) {
       const userIdSupervisor = await this.prisma.user.findUnique({
         where: { id: updateTaskDto.userIdSupervisor },

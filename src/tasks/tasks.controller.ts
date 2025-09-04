@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request, Put } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, Put, BadRequestException } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
@@ -33,8 +33,12 @@ export class TasksController {
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto, @Request() req) {
-    return this.tasksService.update(+id, updateTaskDto, req.user.sub);
+  async update(@Param('id') id: string, @Body() updateTaskDto: UpdateTaskDto, @Request() req) {
+    try {
+      return await this.tasksService.update(+id, updateTaskDto, req.user.sub);
+    } catch (error) {
+      throw new BadRequestException(`Failed to update task: ${error.message}`);
+    }
   }
 
   @Delete(':id')
