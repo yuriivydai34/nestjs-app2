@@ -122,7 +122,7 @@ export class TasksService {
         title: updateTaskDto.title,
         description: updateTaskDto.description,
         deadline: updateTaskDto.deadline,
-        completed: updateTaskDto.completed,
+        active: updateTaskDto.active,
         userIdSupervisor: updateTaskDto.userIdSupervisor,
         usersIdAssociate: updateTaskDto.usersIdAssociate,
       },

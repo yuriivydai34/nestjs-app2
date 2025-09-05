@@ -8,7 +8,7 @@ export class CreateTaskDto {
     description?: string;
 
     @ApiProperty()
-    completed: boolean;
+    active: boolean;
 
     @ApiProperty()
     deadline: Date;
