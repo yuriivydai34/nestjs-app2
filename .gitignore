@@ -57,3 +57,5 @@ report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # Ignore the upload directory if it exists
 /upload
+
+/generated
