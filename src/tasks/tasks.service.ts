@@ -4,6 +4,7 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { PrismaService } from 'src/prisma.service';
 import { TaskUploadService } from 'src/task-upload/task-upload.service';
 import { NotificationService } from 'src/notification/notification.service';
+import { TaskQueryDto } from './dto/task-query.dto';
 
 @Injectable()
 export class TasksService {
@@ -47,24 +48,30 @@ export class TasksService {
     });
   }
 
-  findAll(userId: number) {
-    return this.prisma.task.findMany(
-      {
-        where: {
-          OR: [{
-            userIdCreator: userId
-          },
-          {
-            usersIdAssociate: {
-              hasSome: [userId]
-            }
-          },
-          {
-            userIdSupervisor: userId
-          }]
-        }
+  findAll(userId: number, query: TaskQueryDto) {
+    // Parse sort if it's a string
+    let sort: any = query?.sort;
+    if (typeof sort === 'string') {
+      try {
+        sort = JSON.parse(sort);
+      } catch (e) {
+        sort = null;
       }
-    );
+    }
+    // Default sort if not provided
+    if (!sort || !sort.sortBy || !sort.sortOrder) {
+      sort = { sortBy: 'createdAt', sortOrder: 'desc' };
+    }
+    return this.prisma.task.findMany({
+      where: {
+        OR: [
+          { userIdCreator: userId },
+          { usersIdAssociate: { hasSome: [userId] } },
+          { userIdSupervisor: userId }
+        ]
+      },
+      orderBy: { [sort.sortBy]: sort.sortOrder === 'asc' ? 'asc' : 'desc' },
+    });
   }
 
   findOne(id: number) {

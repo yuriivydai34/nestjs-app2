@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Request, Put, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Request, Put, BadRequestException, Query } from '@nestjs/common';
 import { TasksService } from './tasks.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
+import { TaskQueryDto } from './dto/task-query.dto';
 
 @ApiBearerAuth()
 @Controller('tasks')
@@ -18,8 +19,8 @@ export class TasksController {
   }
 
   @Get()
-  findAll(@Request() req) {
-    return this.tasksService.findAll(req.user.sub);
+  findAll(@Request() req, @Query() query: TaskQueryDto) {
+    return this.tasksService.findAll(req.user.sub, query);
   }
 
   @Get(':id')
