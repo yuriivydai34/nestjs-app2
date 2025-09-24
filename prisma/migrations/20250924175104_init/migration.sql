@@ -107,6 +107,25 @@ CREATE TABLE "public"."TaskTemplate" (
     CONSTRAINT "TaskTemplate_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "public"."CheckListItem" (
+    "id" SERIAL NOT NULL,
+    "text" TEXT NOT NULL,
+    "completed" BOOLEAN NOT NULL DEFAULT false,
+    "checklistId" INTEGER NOT NULL,
+
+    CONSTRAINT "CheckListItem_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."TaskChecklist" (
+    "id" SERIAL NOT NULL,
+    "title" TEXT NOT NULL,
+    "taskId" INTEGER NOT NULL,
+
+    CONSTRAINT "TaskChecklist_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "public"."User"("username");
 
@@ -124,3 +143,9 @@ ALTER TABLE "public"."TaskFile" ADD CONSTRAINT "TaskFile_taskId_fkey" FOREIGN KE
 
 -- AddForeignKey
 ALTER TABLE "public"."CommentFile" ADD CONSTRAINT "CommentFile_commentId_fkey" FOREIGN KEY ("commentId") REFERENCES "public"."Comment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."CheckListItem" ADD CONSTRAINT "CheckListItem_checklistId_fkey" FOREIGN KEY ("checklistId") REFERENCES "public"."TaskChecklist"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."TaskChecklist" ADD CONSTRAINT "TaskChecklist_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "public"."Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

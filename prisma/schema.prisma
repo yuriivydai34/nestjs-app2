@@ -15,8 +15,8 @@ datasource db {
 }
 
 model User {
-  id       Int    @id @default(autoincrement())
-  username String @unique
+  id       Int     @id @default(autoincrement())
+  username String  @unique
   password String
   role     String? @default("user")
 
@@ -33,20 +33,22 @@ model UserProfile {
 }
 
 model Task {
-  id             Int      @id @default(autoincrement())
-  title          String
-  description    String?
-  active         Boolean  @default(true)
-  deadline       DateTime
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  userIdCreator  Int
+  id               Int      @id @default(autoincrement())
+  title            String
+  description      String?
+  active           Boolean  @default(true)
+  deadline         DateTime
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  userIdCreator    Int
   userIdSupervisor Int?
   usersIdAssociate Int[]
-  
+
   Comment Comment[]
 
   TaskFile TaskFile[]
+
+  TaskChecklist TaskChecklist[]
 }
 
 model Comment {
@@ -81,16 +83,16 @@ model CommentFile {
   mimetype     String
   url          String
   uploadDate   DateTime @default(now())
-  commentId       Int
+  commentId    Int
 
   Comment Comment @relation(fields: [commentId], references: [id])
 }
 
 model Message {
-  id        Int      @id @default(autoincrement())
-  content   String
-  createdAt DateTime @default(now())
-  senderId  Int
+  id         Int      @id @default(autoincrement())
+  content    String
+  createdAt  DateTime @default(now())
+  senderId   Int
   receiverId Int
 }
 
@@ -103,9 +105,26 @@ model Notification {
 }
 
 model TaskTemplate {
-  id             Int      @id @default(autoincrement())
-  title          String
-  description    String
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model CheckListItem {
+  id          Int           @id @default(autoincrement())
+  text        String
+  completed   Boolean       @default(false)
+  checklistId Int
+  checklist   TaskChecklist @relation(fields: [checklistId], references: [id])
+}
+
+model TaskChecklist {
+  id     Int    @id @default(autoincrement())
+  title  String
+  taskId Int
+  task   Task   @relation(fields: [taskId], references: [id])
+
+  checklistItems CheckListItem[]
 }
