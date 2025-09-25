@@ -9,11 +9,14 @@ export class TaskChecklistsService {
   constructor(private prisma: PrismaService) {}
 
   create(createTaskChecklistDto: CreateTaskChecklistDto) {
+    // Remove 'id' from checklistItems if present
+    const checklistItems = createTaskChecklistDto.checklistItems?.map(item => {
+      const { id, ...rest } = item;
+      return rest;
+    });
     const data: Prisma.TaskChecklistCreateInput = {
       title: createTaskChecklistDto.title,
-      checklistItems: {
-        create: createTaskChecklistDto.checklistItems,
-      },
+      checklistItems: checklistItems ? { create: checklistItems } : undefined,
       task: {
         connect: { id: createTaskChecklistDto.taskId },
       },
