@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { PrismaService } from 'src/prisma.service';
-import { TaskUploadService } from 'src/task-upload/task-upload.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { TaskQueryDto } from './dto/task-query.dto';
 
@@ -10,7 +9,6 @@ import { TaskQueryDto } from './dto/task-query.dto';
 export class TasksService {
   constructor(
     private prisma: PrismaService,
-    private taskUploadService: TaskUploadService,
     private notificationService: NotificationService,
   ) {}
 
@@ -142,8 +140,6 @@ export class TasksService {
       await prisma.comment.deleteMany({
         where: { taskId: id },
       });
-
-      await this.taskUploadService.deleteFilesForTask(id);
 
       // Then delete the task
       return prisma.task.delete({

@@ -5,13 +5,12 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
-import { TaskUploadModule } from './task-upload/task-upload.module';
+import { FileUploadModule } from './file-upload/file-upload.module';
 import { TasksModule } from './tasks/tasks.module';
 import { CommentsModule } from './comments/comments.module';
 import { UserProfileModule } from './user-profile/user-profile.module';
 import { MessageModule } from './message/message.module';
 import { NotificationModule } from './notification/notification.module';
-import { CommentUploadModule } from './comment-upload/comment-upload.module';
 import { ChatGateway } from './gateways/chat/chat.gateway';
 import { MessageService } from './message/message.service';
 import { PrismaService } from './prisma.service';
@@ -26,8 +25,7 @@ import { TaskChecklistsModule } from './task-checklists/task-checklists.module';
     }),
     AuthModule,
     UsersModule,
-    TaskUploadModule,
-    CommentUploadModule,
+    FileUploadModule,
     TasksModule,
     CommentsModule,
     UserProfileModule,

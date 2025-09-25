@@ -47,7 +47,7 @@ CREATE TABLE "public"."Comment" (
 );
 
 -- CreateTable
-CREATE TABLE "public"."TaskFile" (
+CREATE TABLE "public"."File" (
     "id" SERIAL NOT NULL,
     "filename" TEXT NOT NULL,
     "originalName" TEXT NOT NULL,
@@ -55,23 +55,8 @@ CREATE TABLE "public"."TaskFile" (
     "mimetype" TEXT NOT NULL,
     "url" TEXT NOT NULL,
     "uploadDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "taskId" INTEGER NOT NULL,
 
-    CONSTRAINT "TaskFile_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "public"."CommentFile" (
-    "id" SERIAL NOT NULL,
-    "filename" TEXT NOT NULL,
-    "originalName" TEXT NOT NULL,
-    "size" INTEGER NOT NULL,
-    "mimetype" TEXT NOT NULL,
-    "url" TEXT NOT NULL,
-    "uploadDate" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "commentId" INTEGER NOT NULL,
-
-    CONSTRAINT "CommentFile_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "File_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -126,11 +111,33 @@ CREATE TABLE "public"."TaskChecklist" (
     CONSTRAINT "TaskChecklist_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "public"."_CommentToFile" (
+    "A" INTEGER NOT NULL,
+    "B" INTEGER NOT NULL,
+
+    CONSTRAINT "_CommentToFile_AB_pkey" PRIMARY KEY ("A","B")
+);
+
+-- CreateTable
+CREATE TABLE "public"."_FileToTask" (
+    "A" INTEGER NOT NULL,
+    "B" INTEGER NOT NULL,
+
+    CONSTRAINT "_FileToTask_AB_pkey" PRIMARY KEY ("A","B")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "public"."User"("username");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "UserProfile_userId_key" ON "public"."UserProfile"("userId");
+
+-- CreateIndex
+CREATE INDEX "_CommentToFile_B_index" ON "public"."_CommentToFile"("B");
+
+-- CreateIndex
+CREATE INDEX "_FileToTask_B_index" ON "public"."_FileToTask"("B");
 
 -- AddForeignKey
 ALTER TABLE "public"."UserProfile" ADD CONSTRAINT "UserProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -139,13 +146,19 @@ ALTER TABLE "public"."UserProfile" ADD CONSTRAINT "UserProfile_userId_fkey" FORE
 ALTER TABLE "public"."Comment" ADD CONSTRAINT "Comment_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "public"."Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "public"."TaskFile" ADD CONSTRAINT "TaskFile_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "public"."Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "public"."CommentFile" ADD CONSTRAINT "CommentFile_commentId_fkey" FOREIGN KEY ("commentId") REFERENCES "public"."Comment"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "public"."CheckListItem" ADD CONSTRAINT "CheckListItem_checklistId_fkey" FOREIGN KEY ("checklistId") REFERENCES "public"."TaskChecklist"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "public"."TaskChecklist" ADD CONSTRAINT "TaskChecklist_taskId_fkey" FOREIGN KEY ("taskId") REFERENCES "public"."Task"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."_CommentToFile" ADD CONSTRAINT "_CommentToFile_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."Comment"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."_CommentToFile" ADD CONSTRAINT "_CommentToFile_B_fkey" FOREIGN KEY ("B") REFERENCES "public"."File"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."_FileToTask" ADD CONSTRAINT "_FileToTask_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."File"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."_FileToTask" ADD CONSTRAINT "_FileToTask_B_fkey" FOREIGN KEY ("B") REFERENCES "public"."Task"("id") ON DELETE CASCADE ON UPDATE CASCADE;

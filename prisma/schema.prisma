@@ -46,7 +46,7 @@ model Task {
 
   Comment Comment[]
 
-  TaskFile TaskFile[]
+  File File[]
 
   TaskChecklist TaskChecklist[]
 }
@@ -59,10 +59,10 @@ model Comment {
   taskId    Int
   task      Task     @relation(fields: [taskId], references: [id])
 
-  CommentFile CommentFile[]
+  File File[]
 }
 
-model TaskFile {
+model File {
   id           Int      @id @default(autoincrement())
   filename     String
   originalName String
@@ -70,22 +70,10 @@ model TaskFile {
   mimetype     String
   url          String
   uploadDate   DateTime @default(now())
-  taskId       Int
 
-  Task Task @relation(fields: [taskId], references: [id])
-}
+  Comment Comment[]
 
-model CommentFile {
-  id           Int      @id @default(autoincrement())
-  filename     String
-  originalName String
-  size         Int
-  mimetype     String
-  url          String
-  uploadDate   DateTime @default(now())
-  commentId    Int
-
-  Comment Comment @relation(fields: [commentId], references: [id])
+  Task Task[]
 }
 
 model Message {

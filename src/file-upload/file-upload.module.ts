@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
-import { TaskUploadController } from './task-upload.controller';
-import { TaskUploadService } from './task-upload.service';
+import { FileUploadController } from './file-upload.controller';
+import { FileUploadService } from './file-upload.service';
 import { PrismaService } from 'src/prisma.service';
 import { MulterModule } from '@nestjs/platform-express/multer';
 import { extname } from 'path';
@@ -18,8 +18,8 @@ import { diskStorage } from 'multer';
       }),
     }),
   ],
-  controllers: [TaskUploadController],
-  providers: [TaskUploadService, PrismaService],
-  exports: [TaskUploadService],
+  controllers: [FileUploadController],
+  providers: [FileUploadService, PrismaService],
+  exports: [FileUploadService],
 })
-export class TaskUploadModule { }
+export class FileUploadModule { }

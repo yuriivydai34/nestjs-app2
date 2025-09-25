@@ -13,33 +13,25 @@ export interface FileData {
 }
 
 @Injectable()
-export class CommentUploadService {
+export class FileUploadService {
   constructor(private prisma: PrismaService) { }
 
-  async saveFile(file: Express.Multer.File, commentId: number): Promise<{ message: string; data?: FileData }> {
+  async saveFile(file: Express.Multer.File): Promise<{ message: string; data?: FileData }> {
     // Check if file exists and was uploaded successfully
     if (!file) {
       throw new Error('No file uploaded');
     }
 
-    const Comment = await this.prisma.comment.findUnique({ where: { id: commentId } });
-    if (!Comment) {
-      throw new Error(`Comment with ID ${commentId} not found`);
-    }
-
     // If using diskStorage (which you are), the file is already saved to disk
     // and file.path contains the path to the saved file
     if (file.path) {
-      await this.prisma.commentFile.create({
+      await this.prisma.file.create({
         data: {
           filename: file.path.split('upload/')[1],
           url: file.path,
           originalName: file.originalname,
           size: file.size,
           mimetype: file.mimetype,
-          Comment: {
-            connect: { id: commentId }
-          }
         },
       });
 
@@ -84,21 +76,12 @@ export class CommentUploadService {
   }
 
   getFiles() {
-    return this.prisma.commentFile.findMany();
-  }
-
-  getFilesForComment(commentId: number) {
-    return this.prisma.commentFile.findMany({ where: { commentId: commentId } });
-  }
-
-  async deleteFilesForComment(commentId: number) {
-    const files = await this.prisma.commentFile.findMany({ where: { commentId } });
-    await Promise.all(files.map(file => this.deleteFile(file.id)));
+    return this.prisma.file.findMany();
   }
 
   async deleteFile(id: number) {
     // Ensure the file exists before attempting to delete
-    const file = await this.prisma.commentFile.findUnique({ where: { id } });
+    const file = await this.prisma.file.findUnique({ where: { id } });
     if (!file) {
       throw new Error(`File with ID ${id} not found`);
     }
@@ -112,7 +95,7 @@ export class CommentUploadService {
     }
 
     // Delete the file record from the database
-    await this.prisma.commentFile.delete({ where: { id } });
+    await this.prisma.file.delete({ where: { id } });
 
     return { message: 'File deleted successfully' };
   }
