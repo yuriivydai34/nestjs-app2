@@ -12,7 +12,7 @@ export class TasksService {
     private prisma: PrismaService,
     private notificationService: NotificationService,
     private fileUploadService: FileUploadService,
-  ) {}
+  ) { }
 
   async create(createTaskDto: CreateTaskDto, userIdCreator: number) {
     const userIdSupervisor = await this.prisma.user.findUnique({
@@ -81,12 +81,20 @@ export class TasksService {
         ]
       },
       orderBy: { [sort.sortBy]: sort.sortOrder === 'asc' ? 'asc' : 'desc' },
+      include: {
+        File: true,
+        _count: { select: { Comment: true, TaskChecklist: true } }
+      },
     });
   }
 
   findOne(id: number) {
     return this.prisma.task.findUnique({
       where: { id },
+      include: {
+        File: true,
+        _count: { select: { Comment: true, TaskChecklist: true } }
+      },
     });
   }
 
@@ -97,9 +105,13 @@ export class TasksService {
           contains: title
         }
       },
+      include: {
+        File: true,
+        _count: { select: { Comment: true, TaskChecklist: true } }
+      },
     });
   }
-ß
+
   async update(id: number, updateTaskDto: UpdateTaskDto, userId: number) {
     const existingTask = await this.prisma.task.findUnique({
       where: { id },
@@ -130,7 +142,7 @@ export class TasksService {
       }
     }
 
-    
+
     await this.notificationService.sendTaskUpdatedNotification(id, userId);
 
     const fileIds = updateTaskDto.files || [];
