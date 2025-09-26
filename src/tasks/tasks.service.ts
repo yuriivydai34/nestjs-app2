@@ -38,11 +38,7 @@ export class TasksService {
 
     const fileIds = createTaskDto.files || [];
     const uploadedFiles = await this.fileUploadService.getFilesIds(fileIds);
-    const filesToCreate = uploadedFiles.map(file => {
-      const { id, ...rest } = file;
-      return rest;
-    });
-
+    // Connect files by their actual IDs from uploadedFiles
     return this.prisma.task.create({
       data: {
         title: createTaskDto.title,
@@ -52,7 +48,7 @@ export class TasksService {
         usersIdAssociate: createTaskDto.usersIdAssociate,
         userIdSupervisor: createTaskDto.userIdSupervisor,
         File: {
-          connect: fileIds.map(id => ({ id })),
+          connect: uploadedFiles.map(file => ({ id: file.id })),
         },
       },
     });
