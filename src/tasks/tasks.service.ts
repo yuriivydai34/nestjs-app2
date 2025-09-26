@@ -129,6 +129,9 @@ export class TasksService {
     
     await this.notificationService.sendTaskUpdatedNotification(id, userId);
 
+    const fileIds = updateTaskDto.files || [];
+    const uploadedFiles = await this.fileUploadService.getFilesIds(fileIds);
+
     return this.prisma.task.update({
       where: { id },
       data: {
@@ -138,6 +141,9 @@ export class TasksService {
         active: updateTaskDto.active,
         userIdSupervisor: updateTaskDto.userIdSupervisor,
         usersIdAssociate: updateTaskDto.usersIdAssociate,
+        File: {
+          create: uploadedFiles,
+        },
       },
     });
   }
