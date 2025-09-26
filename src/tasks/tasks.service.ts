@@ -147,6 +147,10 @@ export class TasksService {
 
     const fileIds = updateTaskDto.files || [];
     const uploadedFiles = await this.fileUploadService.getFilesIds(fileIds);
+    const filesToCreate = uploadedFiles.map(file => {
+      const { id, ...rest } = file;
+      return rest;
+    });
 
     return this.prisma.task.update({
       where: { id },
@@ -158,7 +162,7 @@ export class TasksService {
         userIdSupervisor: updateTaskDto.userIdSupervisor,
         usersIdAssociate: updateTaskDto.usersIdAssociate,
         File: {
-          create: uploadedFiles,
+          create: filesToCreate,
         },
       },
     });
