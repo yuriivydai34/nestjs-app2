@@ -154,7 +154,7 @@ export class TasksService {
         userIdSupervisor: updateTaskDto.userIdSupervisor,
         usersIdAssociate: updateTaskDto.usersIdAssociate,
         File: {
-          connect: uploadedFiles.map(file => ({ id: file.id })),
+          set: uploadedFiles.map(file => ({ id: file.id })),
         },
       },
     });
