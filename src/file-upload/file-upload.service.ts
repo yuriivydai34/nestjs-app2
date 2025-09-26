@@ -89,8 +89,9 @@ export class FileUploadService {
   }
 
   async getFilesIds(ids: number[]): Promise<FileData[]> {
+    const numericIds = ids.map(id => typeof id === 'string' ? parseInt(id, 10) : id);
     return this.prisma.file.findMany({
-      where: { id: { in: ids } },
+      where: { id: { in: numericIds } },
     });
   }
 
