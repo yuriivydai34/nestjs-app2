@@ -52,7 +52,7 @@ export class TasksService {
         usersIdAssociate: createTaskDto.usersIdAssociate,
         userIdSupervisor: createTaskDto.userIdSupervisor,
         File: {
-          create: filesToCreate,
+          connect: fileIds.map(id => ({ id })),
         },
       },
     });
@@ -174,6 +174,13 @@ export class TasksService {
       await prisma.comment.deleteMany({
         where: { taskId: id },
       });
+
+      // Delete all checklists and their items associated with this task
+      const checklists = await prisma.taskChecklist.findMany({ where: { taskId: id } });
+      for (const checklist of checklists) {
+        await prisma.checkListItem.deleteMany({ where: { checklistId: checklist.id } });
+        await prisma.taskChecklist.delete({ where: { id: checklist.id } });
+      }
 
       // Then delete the task
       return prisma.task.delete({
