@@ -4,12 +4,14 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { PrismaService } from 'src/prisma.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { TaskQueryDto } from './dto/task-query.dto';
+import { FileUploadService } from 'src/file-upload/file-upload.service';
 
 @Injectable()
 export class TasksService {
   constructor(
     private prisma: PrismaService,
     private notificationService: NotificationService,
+    private fileUploadService: FileUploadService,
   ) {}
 
   async create(createTaskDto: CreateTaskDto, userIdCreator: number) {
@@ -34,6 +36,9 @@ export class TasksService {
       usersIdAssociate: createTaskDto.usersIdAssociate,
     });
 
+    const fileIds = createTaskDto.files || [];
+    const uploadedFiles = await this.fileUploadService.getFilesIds(fileIds);
+
     return this.prisma.task.create({
       data: {
         title: createTaskDto.title,
@@ -42,6 +47,9 @@ export class TasksService {
         userIdCreator: userIdCreator,
         usersIdAssociate: createTaskDto.usersIdAssociate,
         userIdSupervisor: createTaskDto.userIdSupervisor,
+        File: {
+          create: uploadedFiles,
+        },
       },
     });
   }

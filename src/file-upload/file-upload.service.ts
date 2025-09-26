@@ -4,6 +4,7 @@ import * as path from 'path';
 import { PrismaService } from 'src/prisma.service';
 
 export interface FileData {
+  id?: number;
   filename: string;
   originalName: string;
   size: number;
@@ -85,6 +86,12 @@ export class FileUploadService {
 
   async getAllFiles(): Promise<FileData[]> {
     return this.prisma.file.findMany();
+  }
+
+  async getFilesIds(ids: number[]): Promise<FileData[]> {
+    return this.prisma.file.findMany({
+      where: { id: { in: ids } },
+    });
   }
 
   async deleteFile(id: number) {

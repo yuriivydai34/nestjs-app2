@@ -18,4 +18,7 @@ export class CreateTaskDto {
 
     @ApiProperty()
     usersIdAssociate: number[];
+
+    @ApiProperty()
+    files?: number[];
 }
