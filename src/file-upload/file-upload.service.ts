@@ -75,7 +75,15 @@ export class FileUploadService {
     throw new Error('File upload failed: neither path nor buffer available');
   }
 
-  getFiles() {
+  async getFile(id: number): Promise<FileData> {
+    const file = await this.prisma.file.findUnique({ where: { id } });
+    if (!file) {
+      throw new Error(`File with ID ${id} not found`);
+    }
+    return file;
+  }
+
+  async getAllFiles(): Promise<FileData[]> {
     return this.prisma.file.findMany();
   }
 
