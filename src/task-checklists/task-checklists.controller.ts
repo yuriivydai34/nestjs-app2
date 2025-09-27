@@ -17,6 +17,11 @@ export class TaskChecklistsController {
     return this.taskChecklistsService.findAll();
   }
 
+  @Get('for-task/:taskId')
+  findAllForTask(@Param('taskId') taskId: string) {
+    return this.taskChecklistsService.findAllForTask(+taskId);
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.taskChecklistsService.findOne(+id);

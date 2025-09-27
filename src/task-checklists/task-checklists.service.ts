@@ -30,6 +30,12 @@ export class TaskChecklistsService {
     return this.prisma.taskChecklist.findMany();
   }
 
+  findAllForTask(taskId: number) {
+    return this.prisma.taskChecklist.findMany({
+      where: { taskId },
+    });
+  }
+
   findOne(id: number) {
     return this.prisma.taskChecklist.findUnique({
       where: { id },
