@@ -30,9 +30,26 @@ export class MessageService {
     });
   }
 
-  update(id: number, isRead: boolean) {
-    return this.prisma.message.update({
-      where: { id },
+  findByRoomId(roomId: number) {
+    return this.prisma.message.findMany({
+      where: { roomId },
+    });
+  }
+
+  findByUserIds(userId: number, otherUserId: number) {
+    return this.prisma.message.findMany({
+      where: {
+        OR: [
+          { senderId: userId, receiverId: otherUserId },
+          { senderId: otherUserId, receiverId: userId },
+        ],
+      },
+    });
+  }
+
+  update(ids: number[], isRead: boolean) {
+    return this.prisma.message.updateMany({
+      where: { id: { in: ids } },
       data: { isRead },
     });
   }
