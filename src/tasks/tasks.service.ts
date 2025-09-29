@@ -38,7 +38,7 @@ export class TasksService {
 
     const fileIds = createTaskDto.files || [];
     const uploadedFiles = await this.fileUploadService.getFilesIds(fileIds);
-    // Connect files by their actual IDs from uploadedFiles
+    
     return this.prisma.task.create({
       data: {
         title: createTaskDto.title,

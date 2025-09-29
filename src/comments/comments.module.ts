@@ -4,8 +4,10 @@ import { CommentsController } from './comments.controller';
 import { PrismaService } from '../prisma.service';
 import { NotificationService } from 'src/notification/notification.service';
 import { UsersService } from 'src/users/users.service';
+import { FileUploadModule } from 'src/file-upload/file-upload.module';
 
 @Module({
+  imports: [FileUploadModule],
   controllers: [CommentsController],
   providers: [CommentsService, PrismaService, NotificationService, UsersService],
 })

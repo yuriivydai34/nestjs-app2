@@ -3,12 +3,14 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { PrismaService } from 'src/prisma.service';
 import { NotificationService } from 'src/notification/notification.service';
+import { FileUploadService } from 'src/file-upload/file-upload.service';
 
 @Injectable()
 export class CommentsService {
   constructor(
     private prisma: PrismaService,
-    private notificationService: NotificationService
+    private notificationService: NotificationService,
+    private fileUploadService: FileUploadService,
   ) { }
 
   async create(createCommentDto: CreateCommentDto, userId: number) {
@@ -26,11 +28,17 @@ export class CommentsService {
 
     await this.notificationService.sendCommentCreatedNotification(createCommentDto.taskId, userId);
 
+    const fileIds = createCommentDto.files || [];
+    const uploadedFiles = await this.fileUploadService.getFilesIds(fileIds);
+
     return this.prisma.comment.create({
       data: {
         text: createCommentDto.text,
         taskId: taskId,
         userId,
+        File: {
+          connect: uploadedFiles.map(file => ({ id: file.id })),
+        },
       },
     });
   }
