@@ -11,9 +11,10 @@ CREATE TABLE "public"."User" (
 -- CreateTable
 CREATE TABLE "public"."UserProfile" (
     "id" SERIAL NOT NULL,
-    "firstName" TEXT NOT NULL,
-    "lastName" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "avatarUrl" TEXT NOT NULL,
     "userId" INTEGER NOT NULL,
 
     CONSTRAINT "UserProfile_pkey" PRIMARY KEY ("id")

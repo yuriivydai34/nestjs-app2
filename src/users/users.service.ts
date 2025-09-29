@@ -9,9 +9,10 @@ export interface UserInterface {
   id: number;
   username: string;
   UserProfile: {
-    firstName: string;
-    lastName: string;
+    name: string;
     email: string;
+    role: string;
+    avatarUrl: string;
   } | null;
 }
 
@@ -49,30 +50,36 @@ export class UsersService {
         password: hash,
         UserProfile: {
           create: {
-            firstName: 'firstName',
-            lastName: 'lastName',
-            email: 'email@example.com'
+            name: 'firstName lastName',
+            email: 'email@example.com',
+            role: 'user',
+            avatarUrl: 'https://example.com/avatar.png'
           }
         }
       }
     });
   }
 
-  getAll(): Promise<UserInterface[]> {
-    return this.prisma.user.findMany(
-      {
-        select: {
-          id: true,
-          username: true,
-          UserProfile: {
-            select: {
-              firstName: true,
-              lastName: true,
-              email: true
-            }
+  async getAll(): Promise<UserInterface[]> {
+    const users = await this.prisma.user.findMany({
+      select: {
+        id: true,
+        username: true,
+        UserProfile: {
+          select: {
+            name: true,
+            email: true,
+            role: true,
+            avatarUrl: true
           }
         }
       }
-    );
+    });
+
+    return users.map(user => ({
+      id: user.id,
+      username: user.username,
+      UserProfile: user.UserProfile
+    }));
   }
 }
