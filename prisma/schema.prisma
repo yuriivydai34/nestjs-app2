@@ -75,14 +75,28 @@ model File {
   Comment Comment[]
 
   Task Task[]
+
+  Message Message[]
 }
 
 model Message {
-  id         Int      @id @default(autoincrement())
+  id         Int     @id @default(autoincrement())
   content    String
-  createdAt  DateTime @default(now())
   senderId   Int
-  receiverId Int
+  timestamp  String
+  roomId     Int?
+  receiverId Int?
+  isRead     Boolean
+  files      File[]
+}
+
+model ChatRoom {
+  id              Int      @id @default(autoincrement())
+  name            String
+  createdBy       Int
+  createdAt       DateTime @default(now())
+  members         Int[]
+  isDirectMessage Boolean?
 }
 
 model Notification {

@@ -16,6 +16,7 @@ import { MessageService } from './message/message.service';
 import { PrismaService } from './prisma.service';
 import { TaskTemplateModule } from './task-template/task-template.module';
 import { TaskChecklistsModule } from './task-checklists/task-checklists.module';
+import { ChatRoomModule } from './chat-room/chat-room.module';
 
 @Module({
   imports: [
@@ -32,7 +33,8 @@ import { TaskChecklistsModule } from './task-checklists/task-checklists.module';
     MessageModule,
     NotificationModule,
     TaskTemplateModule,
-    TaskChecklistsModule
+    TaskChecklistsModule,
+    ChatRoomModule
   ],
   controllers: [AppController],
   providers: [AppService, MessageService, PrismaService, ChatGateway],

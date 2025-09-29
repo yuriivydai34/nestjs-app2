@@ -4,11 +4,15 @@ import { PrismaService } from 'src/prisma.service';
 
 @Injectable()
 export class MessageService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   create(createMessageDto: CreateMessageDto) {
     return this.prisma.message.create({
-      data: createMessageDto,
+      data: {
+        ...createMessageDto,
+        timestamp: new Date().toISOString(),
+        isRead: false, // default value
+      },
     });
   }
 
@@ -23,6 +27,13 @@ export class MessageService {
   findOne(id: number) {
     return this.prisma.message.findUnique({
       where: { id },
+    });
+  }
+
+  update(id: number, isRead: boolean) {
+    return this.prisma.message.update({
+      where: { id },
+      data: { isRead },
     });
   }
 }

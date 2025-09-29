@@ -64,11 +64,25 @@ CREATE TABLE "public"."File" (
 CREATE TABLE "public"."Message" (
     "id" SERIAL NOT NULL,
     "content" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "senderId" INTEGER NOT NULL,
-    "receiverId" INTEGER NOT NULL,
+    "timestamp" TEXT NOT NULL,
+    "roomId" INTEGER,
+    "receiverId" INTEGER,
+    "isRead" BOOLEAN NOT NULL,
 
     CONSTRAINT "Message_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "public"."ChatRoom" (
+    "id" SERIAL NOT NULL,
+    "name" TEXT NOT NULL,
+    "createdBy" INTEGER NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "members" INTEGER[],
+    "isDirectMessage" BOOLEAN,
+
+    CONSTRAINT "ChatRoom_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -128,6 +142,14 @@ CREATE TABLE "public"."_FileToTask" (
     CONSTRAINT "_FileToTask_AB_pkey" PRIMARY KEY ("A","B")
 );
 
+-- CreateTable
+CREATE TABLE "public"."_FileToMessage" (
+    "A" INTEGER NOT NULL,
+    "B" INTEGER NOT NULL,
+
+    CONSTRAINT "_FileToMessage_AB_pkey" PRIMARY KEY ("A","B")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "User_username_key" ON "public"."User"("username");
 
@@ -139,6 +161,9 @@ CREATE INDEX "_CommentToFile_B_index" ON "public"."_CommentToFile"("B");
 
 -- CreateIndex
 CREATE INDEX "_FileToTask_B_index" ON "public"."_FileToTask"("B");
+
+-- CreateIndex
+CREATE INDEX "_FileToMessage_B_index" ON "public"."_FileToMessage"("B");
 
 -- AddForeignKey
 ALTER TABLE "public"."UserProfile" ADD CONSTRAINT "UserProfile_userId_fkey" FOREIGN KEY ("userId") REFERENCES "public"."User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -163,3 +188,9 @@ ALTER TABLE "public"."_FileToTask" ADD CONSTRAINT "_FileToTask_A_fkey" FOREIGN K
 
 -- AddForeignKey
 ALTER TABLE "public"."_FileToTask" ADD CONSTRAINT "_FileToTask_B_fkey" FOREIGN KEY ("B") REFERENCES "public"."Task"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."_FileToMessage" ADD CONSTRAINT "_FileToMessage_A_fkey" FOREIGN KEY ("A") REFERENCES "public"."File"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "public"."_FileToMessage" ADD CONSTRAINT "_FileToMessage_B_fkey" FOREIGN KEY ("B") REFERENCES "public"."Message"("id") ON DELETE CASCADE ON UPDATE CASCADE;
