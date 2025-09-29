@@ -39,7 +39,7 @@ CREATE TABLE "public"."Task" (
 -- CreateTable
 CREATE TABLE "public"."Comment" (
     "id" SERIAL NOT NULL,
-    "content" TEXT NOT NULL,
+    "text" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "userId" INTEGER NOT NULL,
     "taskId" INTEGER NOT NULL,
