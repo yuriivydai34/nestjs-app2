@@ -43,7 +43,7 @@ export class TasksService {
       data: {
         title: createTaskDto.title,
         description: createTaskDto.description,
-        deadline: createTaskDto.deadline,
+        deadline: new Date(createTaskDto.deadline),
         userIdCreator: userIdCreator,
         usersIdAssociate: createTaskDto.usersIdAssociate,
         userIdSupervisor: createTaskDto.userIdSupervisor,
@@ -144,20 +144,20 @@ export class TasksService {
     const fileIds = updateTaskDto.files || [];
     const uploadedFiles = await this.fileUploadService.getFilesIds(fileIds);
 
-    return this.prisma.task.update({
-      where: { id },
-      data: {
-        title: updateTaskDto.title,
-        description: updateTaskDto.description,
-        deadline: updateTaskDto.deadline,
-        active: updateTaskDto.active,
-        userIdSupervisor: updateTaskDto.userIdSupervisor,
-        usersIdAssociate: updateTaskDto.usersIdAssociate,
-        File: {
-          set: uploadedFiles.map(file => ({ id: file.id })),
+      return this.prisma.task.update({
+        where: { id },
+        data: {
+          title: updateTaskDto.title,
+          description: updateTaskDto.description,
+          deadline: updateTaskDto.deadline ? new Date(updateTaskDto.deadline) : undefined,
+          active: updateTaskDto.active,
+          userIdSupervisor: updateTaskDto.userIdSupervisor,
+          usersIdAssociate: updateTaskDto.usersIdAssociate,
+          File: {
+            set: uploadedFiles.map(file => ({ id: file.id })),
+          },
         },
-      },
-    });
+      });
   }
 
   async remove(id: number) {
