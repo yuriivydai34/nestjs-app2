@@ -53,7 +53,7 @@ export class UsersService {
             name: 'firstName lastName',
             email: 'email@example.com',
             role: 'user',
-            avatarUrl: 'https://example.com/avatar.png'
+            avatarUrl: 'https://img.heroui.chat/image/avatar?w=40&h=40&u=1'
           }
         }
       }
