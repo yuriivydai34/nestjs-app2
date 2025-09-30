@@ -47,7 +47,7 @@ export class TasksService {
         userIdCreator: userIdCreator,
         usersIdAssociate: createTaskDto.usersIdAssociate,
         userIdSupervisor: createTaskDto.userIdSupervisor,
-        File: {
+        files: {
           connect: uploadedFiles.map(file => ({ id: file.id })),
         },
       },
@@ -78,8 +78,8 @@ export class TasksService {
       },
       orderBy: { [sort.sortBy]: sort.sortOrder === 'asc' ? 'asc' : 'desc' },
       include: {
-        File: true,
-        _count: { select: { Comment: true, TaskChecklist: true } }
+        files: true,
+        _count: { select: { comments: true, taskChecklists: true } }
       },
     });
   }
@@ -88,8 +88,8 @@ export class TasksService {
     return this.prisma.task.findUnique({
       where: { id },
       include: {
-        File: true,
-        _count: { select: { Comment: true, TaskChecklist: true } }
+        files: true,
+        _count: { select: { comments: true, taskChecklists: true } }
       },
     });
   }
@@ -102,8 +102,8 @@ export class TasksService {
         }
       },
       include: {
-        File: true,
-        _count: { select: { Comment: true, TaskChecklist: true } }
+        files: true,
+        _count: { select: { comments: true, taskChecklists: true } }
       },
     });
   }
@@ -153,7 +153,7 @@ export class TasksService {
           active: updateTaskDto.active,
           userIdSupervisor: updateTaskDto.userIdSupervisor,
           usersIdAssociate: updateTaskDto.usersIdAssociate,
-          File: {
+          files: {
             set: uploadedFiles.map(file => ({ id: file.id })),
           },
         },

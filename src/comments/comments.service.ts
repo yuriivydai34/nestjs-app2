@@ -36,7 +36,7 @@ export class CommentsService {
         text: createCommentDto.text,
         taskId: taskId,
         userId,
-        File: {
+        files: {
           connect: uploadedFiles.map(file => ({ id: file.id })),
         },
       },
@@ -59,10 +59,20 @@ export class CommentsService {
     });
   }
 
-  update(id: number, updateCommentDto: UpdateCommentDto) {
+  async update(id: number, updateCommentDto: UpdateCommentDto) {
+    // Exclude taskId from the update data as Prisma does not allow updating it
+    const { taskId, files, ...rest } = updateCommentDto;
+    let data: any = { ...rest };
+
+    if (files) {
+      data.files = {
+        set: files.map(fileId => ({ id: fileId })),
+      };
+    }
+
     return this.prisma.comment.update({
       where: { id },
-      data: updateCommentDto,
+      data,
     });
   }
 
