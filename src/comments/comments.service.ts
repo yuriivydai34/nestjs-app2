@@ -31,7 +31,7 @@ export class CommentsService {
     const fileIds = createCommentDto.files || [];
     const uploadedFiles = await this.fileUploadService.getFilesIds(fileIds);
 
-    return this.prisma.comment.create({
+    const result = await this.prisma.comment.create({
       data: {
         text: createCommentDto.text,
         taskId: taskId,
@@ -41,6 +41,7 @@ export class CommentsService {
         },
       },
     });
+    return { ...result, files: uploadedFiles };
   }
 
   findAll() {
@@ -56,6 +57,7 @@ export class CommentsService {
   findByTaskId(taskId: number) {
     return this.prisma.comment.findMany({
       where: { taskId },
+      include: { files: true },
     });
   }
 
