@@ -66,7 +66,7 @@ CREATE TABLE "public"."Message" (
     "content" TEXT NOT NULL,
     "senderId" INTEGER NOT NULL,
     "timestamp" TEXT NOT NULL,
-    "roomId" INTEGER,
+    "roomId" TEXT,
     "receiverId" INTEGER,
     "isRead" BOOLEAN NOT NULL,
 

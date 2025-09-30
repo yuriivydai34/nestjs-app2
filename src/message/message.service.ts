@@ -10,6 +10,11 @@ export class MessageService {
     return this.prisma.message.create({
       data: {
         ...createMessageDto,
+        roomId: createMessageDto.roomId != null
+          ? (typeof createMessageDto.roomId === 'string'
+              ? createMessageDto.roomId
+              : String(createMessageDto.roomId))
+          : undefined,
         timestamp: new Date().toISOString(),
         isRead: false, // default value
       },
@@ -30,7 +35,7 @@ export class MessageService {
     });
   }
 
-  findByRoomId(roomId: number) {
+  findByRoomId(roomId: string) {
     return this.prisma.message.findMany({
       where: { roomId },
     });

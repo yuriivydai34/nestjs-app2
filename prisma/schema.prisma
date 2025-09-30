@@ -84,7 +84,7 @@ model Message {
   content    String
   senderId   Int
   timestamp  String
-  roomId     Int?
+  roomId     String?
   receiverId Int?
   isRead     Boolean
   files      File[]

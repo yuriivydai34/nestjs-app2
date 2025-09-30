@@ -1,10 +1,16 @@
-import { Body, Controller, Get, Param, Put, Request } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Request } from '@nestjs/common';
 import { MessageService } from './message.service';
+import { CreateMessageDto } from './dto/create-message.dto';
 
 @Controller('message')
 export class MessageController {
   constructor(private readonly messageService: MessageService) {}
   
+  @Post()
+  create(@Body() createMessageDto: CreateMessageDto) {
+    return this.messageService.create(createMessageDto);
+  }
+
   @Get()
   findAll(@Request() req) {
     return this.messageService.findAll(+req.user.sub);
@@ -17,7 +23,7 @@ export class MessageController {
 
   @Get('room/:roomId')
   findByRoomId(@Param('roomId') roomId: string) {
-    return this.messageService.findByRoomId(+roomId);
+    return this.messageService.findByRoomId(roomId);
   }
 
   @Get(':id')
