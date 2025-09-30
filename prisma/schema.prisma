@@ -45,11 +45,11 @@ model Task {
   userIdSupervisor Int?
   usersIdAssociate Int[]
 
-  Comment Comment[]
+  comments Comment[]
 
-  File File[]
+  files File[]
 
-  TaskChecklist TaskChecklist[]
+  taskChecklists TaskChecklist[]
 }
 
 model Comment {
@@ -60,7 +60,7 @@ model Comment {
   taskId    Int
   task      Task     @relation(fields: [taskId], references: [id])
 
-  File File[]
+  files File[]
 }
 
 model File {
