@@ -82,7 +82,7 @@ model File {
 model Message {
   id         Int     @id @default(autoincrement())
   content    String
-  senderId   Int
+  senderId   Int?
   timestamp  String
   roomId     String?
   receiverId Int?

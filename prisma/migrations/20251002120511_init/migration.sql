@@ -64,7 +64,7 @@ CREATE TABLE "public"."File" (
 CREATE TABLE "public"."Message" (
     "id" SERIAL NOT NULL,
     "content" TEXT NOT NULL,
-    "senderId" INTEGER NOT NULL,
+    "senderId" INTEGER,
     "timestamp" TEXT NOT NULL,
     "roomId" TEXT,
     "receiverId" INTEGER,
