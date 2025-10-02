@@ -19,6 +19,7 @@ model User {
   username String  @unique
   password String
   role     String? @default("user")
+  status   String? @default("offline")
 
   UserProfile UserProfile?
 }

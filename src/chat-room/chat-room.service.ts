@@ -17,22 +17,46 @@ export class ChatRoomService {
     return this.prisma.chatRoom.findMany();
   }
 
-  findOne(id: number) {
+  findOne(id: string) {
     return this.prisma.chatRoom.findUnique({
       where: { id },
     });
   }
 
-  update(id: number, updateChatRoomDto: UpdateChatRoomDto) {
+  update(id: string, updateChatRoomDto: UpdateChatRoomDto) {
     return this.prisma.chatRoom.update({
       where: { id },
       data: updateChatRoomDto,
     });
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return this.prisma.chatRoom.delete({
       where: { id },
     });
+  }
+
+  removeMembers(roomId: string, userIds: number[]) {
+    // return this.prisma.chatRoom.update({
+    //   where: { id: roomId },
+    //   data: {
+    //     members: {
+    //       disconnect: userIds.map(id => ({ id })),
+    //     },
+    //   },
+    // });
+    throw new Error('Not implemented yet');
+  }
+
+  addMembers(roomId: string, userIds: number[]) {
+    // return this.prisma.chatRoom.update({
+    //   where: { id: roomId },
+    //   data: {
+    //     members: {
+    //       connect: userIds.map(id => ({ id })),
+    //     },
+    //   },
+    // });
+    throw new Error('Not implemented yet');
   }
 }

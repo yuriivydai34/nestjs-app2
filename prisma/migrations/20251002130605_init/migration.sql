@@ -4,6 +4,7 @@ CREATE TABLE "public"."User" (
     "username" TEXT NOT NULL,
     "password" TEXT NOT NULL,
     "role" TEXT DEFAULT 'user',
+    "status" TEXT DEFAULT 'offline',
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")
 );
