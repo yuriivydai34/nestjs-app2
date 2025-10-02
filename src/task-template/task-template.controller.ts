@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Put, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Put, Param, Delete, Query } from '@nestjs/common';
 import { TaskTemplateService } from './task-template.service';
 import { CreateTaskTemplateDto } from './dto/create-task-template.dto';
 import { UpdateTaskTemplateDto } from './dto/update-task-template.dto';
+import { TemplateQueryDto } from './dto/template-query.dto';
 
 @Controller('task-template')
 export class TaskTemplateController {
@@ -13,8 +14,8 @@ export class TaskTemplateController {
   }
 
   @Get()
-  findAll() {
-    return this.taskTemplateService.findAll();
+  findAll(@Query() query: TemplateQueryDto) {
+    return this.taskTemplateService.findAll(query);
   }
 
   @Get(':id')
