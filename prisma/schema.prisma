@@ -91,7 +91,7 @@ model Message {
 }
 
 model ChatRoom {
-  id              Int      @id @default(autoincrement())
+  id              String   @id @default(cuid())
   name            String
   createdBy       Int
   createdAt       DateTime @default(now())

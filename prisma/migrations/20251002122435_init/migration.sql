@@ -75,7 +75,7 @@ CREATE TABLE "public"."Message" (
 
 -- CreateTable
 CREATE TABLE "public"."ChatRoom" (
-    "id" SERIAL NOT NULL,
+    "id" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "createdBy" INTEGER NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
