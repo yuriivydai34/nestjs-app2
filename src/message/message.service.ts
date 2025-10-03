@@ -17,6 +17,9 @@ export class MessageService {
           : undefined,
         timestamp: new Date().toISOString(),
         isRead: false, // default value
+        files: {
+          connect: createMessageDto.files?.map(fileId => ({ id: fileId })),
+        },
       },
     });
   }
@@ -26,18 +29,21 @@ export class MessageService {
       where: {
         OR: [{ senderId: userId }, { receiverId: userId }],
       },
+      include: { files: true },
     });
   }
 
   findOne(id: number) {
     return this.prisma.message.findUnique({
       where: { id },
+      include: { files: true },
     });
   }
 
   findByRoomId(roomId: string) {
     return this.prisma.message.findMany({
       where: { roomId },
+      include: { files: true },
     });
   }
 
@@ -49,6 +55,7 @@ export class MessageService {
           { senderId: otherUserId, receiverId: userId },
         ],
       },
+      include: { files: true },
     });
   }
 

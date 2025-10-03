@@ -3,4 +3,5 @@ export class CreateMessageDto {
     receiverId: number;
     senderId: number;
     roomId?: string;
+    files?: number[];
 }
