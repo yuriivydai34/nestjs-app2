@@ -65,6 +65,7 @@ export class UsersService {
       select: {
         id: true,
         username: true,
+        role: true,
         UserProfile: {
           select: {
             name: true,
@@ -79,6 +80,7 @@ export class UsersService {
     return users.map(user => ({
       id: user.id,
       username: user.username,
+      role: user.role,
       UserProfile: user.UserProfile
     }));
   }
