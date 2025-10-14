@@ -68,7 +68,13 @@ export class TaskChecklistsService {
     });
   }
 
-  remove(id: number) {
+  async remove(id: number) {
+    // First delete all associated checklist items
+    await this.prisma.checkListItem.deleteMany({
+      where: { checklistId: id },
+    });
+    
+    // Then delete the task checklist
     return this.prisma.taskChecklist.delete({
       where: { id },
     });
