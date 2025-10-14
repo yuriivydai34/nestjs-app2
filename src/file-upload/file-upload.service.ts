@@ -26,10 +26,19 @@ export class FileUploadService {
     // If using diskStorage (which you are), the file is already saved to disk
     // and file.path contains the path to the saved file
     if (file.path) {
+      // Use the original filename (with Cyrillic) for both DB and disk
+      const uploadDir = path.dirname(file.path);
+      const originalFilePath = path.join(uploadDir, file.originalname);
+
+      // If the file was saved with a different name, rename it to the original
+      if (file.path !== originalFilePath) {
+        fs.renameSync(file.path, originalFilePath);
+      }
+
       await this.prisma.file.create({
         data: {
-          filename: file.path.split('upload/')[1],
-          url: file.path,
+          filename: file.originalname, // Preserve original (Cyrillic) filename
+          url: originalFilePath,
           originalName: file.originalname,
           size: file.size,
           mimetype: file.mimetype,
@@ -39,11 +48,11 @@ export class FileUploadService {
       return {
         message: 'File uploaded successfully',
         data: {
-          filename: file.path.split('upload/')[1],
+          filename: file.originalname,
           originalName: file.originalname,
           size: file.size,
           mimetype: file.mimetype,
-          url: file.path,
+          url: originalFilePath,
           uploadDate: new Date(),
         }
       };
