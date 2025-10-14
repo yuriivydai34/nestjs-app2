@@ -5,13 +5,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  app.enableCors({
-    origin: process.env.CORS_ORIGIN || '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true,
-  });
+  app.enableCors();
 
-const config = new DocumentBuilder()
+  const config = new DocumentBuilder()
     .setTitle('CRM Tasks API')
     .setDescription('The CRM Tasks API description')
     .setVersion('1.0')
