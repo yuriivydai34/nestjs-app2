@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { 
+  Controller, 
+  Get, 
+  Post, 
+  Body, 
+  Param, 
+  Delete, 
+  Put 
+} from '@nestjs/common';
 import { TaskChecklistsService } from './task-checklists.service';
 import { CreateTaskChecklistDto } from './dto/create-task-checklist.dto';
 import { UpdateTaskChecklistDto } from './dto/update-task-checklist.dto';
@@ -27,7 +35,7 @@ export class TaskChecklistsController {
     return this.taskChecklistsService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Put(':id')
   update(@Param('id') id: string, @Body() updateTaskChecklistDto: UpdateTaskChecklistDto) {
     return this.taskChecklistsService.update(+id, updateTaskChecklistDto);
   }

@@ -33,6 +33,7 @@ export class TaskChecklistsService {
   findAllForTask(taskId: number) {
     return this.prisma.taskChecklist.findMany({
       where: { taskId },
+      include: { checklistItems: true },
     });
   }
 
@@ -44,10 +45,12 @@ export class TaskChecklistsService {
 
   update(id: number, updateTaskChecklistDto: UpdateTaskChecklistDto) {
     const { taskId, checklistItems, ...rest } = updateTaskChecklistDto;
+    // Remove any potential id field that might have been passed
+    const { id: _, ...safeRest } = rest as any;
     return this.prisma.taskChecklist.update({
       where: { id },
       data: {
-        ...rest,
+        ...safeRest,
         ...(taskId !== undefined && {
           task: { connect: { id: taskId } }
         }),
