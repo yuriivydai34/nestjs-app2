@@ -56,15 +56,11 @@ export class TaskChecklistsService {
         }),
         ...(checklistItems !== undefined && {
           checklistItems: {
-            set: checklistItems.map(item => ({
-              id: item.id
-            })),
-            update: checklistItems.map(item => ({
-              where: { id: item.id },
-              data: {
-                text: item.text,
-                completed: item.completed,
-              }
+            // Delete all existing items first, then recreate
+            deleteMany: {},
+            create: checklistItems.map(item => ({
+              text: item.text,
+              completed: item.completed,
             }))
           }
         }),
