@@ -8,7 +8,7 @@ The Backup API provides endpoints for creating, managing, and downloading Postgr
 - ✅ List all backups with metadata
 - ✅ Download backup files
 - ✅ Delete backups (file + database record)
-- 🚧 Upload to cloud storage (MinIO/S3) - planned
+- ✅ Upload to cloud storage (MinIO/S3)
 
 ## Prerequisites
 
@@ -83,10 +83,23 @@ Returns details of a specific backup.
 
 Downloads the backup file. Returns the SQL file as an attachment.
 
-### 5. Upload to Cloud (Coming Soon)
+### 5. Upload to Cloud Storage
 **POST** `/backups/:id/upload-cloud`
 
-Uploads a backup to cloud storage (MinIO/S3). Currently returns a placeholder response.
+Uploads a backup to MinIO cloud storage and returns an updated backup record with cloud URL.
+
+**Response:**
+```json
+{
+  "id": 1,
+  "filename": "backup_2024-10-17_14-30-22.sql",
+  "description": "Daily backup before maintenance", 
+  "size": 1024000,
+  "type": "full",
+  "status": "completed",
+  "cloudUrl": "http://localhost:9000/backups/backups/backup_2024-10-17_14-30-22.sql?X-Amz-Algorithm=...",
+  "createdAt": "2024-10-17T14:30-22.000Z"
+}
 
 ### 6. Delete Backup
 **DELETE** `/backups/:id`
@@ -113,36 +126,83 @@ The API handles various error scenarios:
 - **500**: Backup creation failed (database issues, permissions, etc.)
 - **401**: Authentication required
 
-## Future Enhancements
+## MinIO Cloud Storage Integration
 
-### Cloud Storage Integration
+### ✅ **Now Implemented!**
 
-The system is designed to support cloud storage uploads to MinIO or AWS S3:
+The system now supports uploading backups to MinIO cloud storage.
 
-1. **Install cloud storage dependencies:**
+### Setup MinIO
+
+1. **Install and run MinIO locally:**
 ```bash
-npm install @aws-sdk/client-s3 # for S3
-# or
-npm install minio # for MinIO
+# Using Docker
+docker run -p 9000:9000 -p 9001:9001 \
+  -e "MINIO_ROOT_USER=minioadmin" \
+  -e "MINIO_ROOT_PASSWORD=minioadmin" \
+  quay.io/minio/minio server /data --console-address ":9001"
+
+# Or download MinIO binary for your platform
 ```
 
-2. **Update environment variables:**
+2. **Configure environment variables:**
+
+Create a `.env` file in your project root with:
 ```env
+# Database Configuration
+DATABASE_URL="postgresql://username:password@localhost:5432/mydb1?schema=public"
+
+# JWT Configuration  
+JWT_SECRET="your-super-secret-jwt-key"
+
 # MinIO Configuration
 MINIO_ENDPOINT=localhost
 MINIO_PORT=9000
 MINIO_ACCESS_KEY=minioadmin
 MINIO_SECRET_KEY=minioadmin
 MINIO_BUCKET=backups
-
-# OR S3 Configuration
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=your-access-key
-AWS_SECRET_ACCESS_KEY=your-secret-key
-AWS_S3_BUCKET=your-backup-bucket
+MINIO_USE_SSL=false
 ```
 
-3. **The `uploadToCloud` method in `BackupService` is ready for implementation**
+### Using Cloud Upload
+
+The `POST /backups/:id/upload-cloud` endpoint is now fully functional:
+
+```bash
+# Upload a backup to MinIO
+curl -X POST http://localhost:3000/backups/1/upload-cloud \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+**Response:**
+```json
+{
+  "id": 1,
+  "filename": "backup_2024-10-17_14-30-22.sql",
+  "description": "Daily backup before maintenance",
+  "size": 1024000,
+  "type": "full", 
+  "status": "completed",
+  "cloudUrl": "http://localhost:9000/backups/backups/backup_2024-10-17_14-30-22.sql?X-Amz-Algorithm=...",
+  "createdAt": "2024-10-17T14:30:22.000Z"
+}
+```
+
+### Features
+
+- ✅ **Automatic bucket creation** - Creates the 'backups' bucket if it doesn't exist
+- ✅ **File upload** - Uploads backup files to MinIO using `fPutObject`
+- ✅ **Presigned URLs** - Generates secure download URLs (valid for 7 days)
+- ✅ **Error handling** - Proper error responses for missing files or upload failures
+- ✅ **Database updates** - Stores cloud URL in the backup record
+
+### MinIO Web Console
+
+Access the MinIO web console at http://localhost:9001 with:
+- **Username**: minioadmin  
+- **Password**: minioadmin
+
+## Future Enhancements
 
 ### Backup Scheduling
 
@@ -156,23 +216,38 @@ Add backup compression support:
 - Gzip compression for smaller file sizes
 - Update file extensions to `.sql.gz`
 
-## Testing
+## Complete Workflow Example
 
-Run the backup endpoints using tools like Postman or curl:
+Here's a complete example of creating and uploading a backup:
 
 ```bash
-# Create a backup
+# 1. Create a backup
 curl -X POST http://localhost:3000/backups \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"description": "Test backup", "type": "full"}'
+  -d '{"description": "Test backup with MinIO", "type": "full"}'
 
-# List backups
+# Response: {"id": 1, "filename": "backup_2024-10-17_14-30-22.sql", ...}
+
+# 2. Upload to MinIO
+curl -X POST http://localhost:3000/backups/1/upload-cloud \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# Response: {..., "cloudUrl": "http://localhost:9000/...", ...}
+
+# 3. List all backups (see cloud URLs)
 curl -X GET http://localhost:3000/backups \
   -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
-# Download backup
+# 4. Download from local storage
 curl -X GET http://localhost:3000/backups/1/download \
   -H "Authorization: Bearer YOUR_JWT_TOKEN" \
   -o backup.sql
+
+# 5. Access from MinIO directly using the cloudUrl from step 2
+# The presigned URL allows direct download from MinIO
 ```
+
+## Testing
+
+Make sure MinIO is running on localhost:9000 and your environment variables are properly configured.

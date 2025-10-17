@@ -94,19 +94,19 @@ export class BackupController {
   }
 
   @Post(':id/upload-cloud')
-  @ApiOperation({ summary: 'Upload backup to cloud storage (MinIO/S3)' })
+  @ApiOperation({ summary: 'Upload backup to cloud storage (MinIO)' })
   @ApiResponse({
     status: 200,
-    description: 'Backup uploaded to cloud storage',
+    description: 'Backup uploaded to MinIO cloud storage successfully',
     type: BackupResponseDto,
   })
   @ApiResponse({
     status: 404,
-    description: 'Backup not found',
+    description: 'Backup or backup file not found',
   })
   @ApiResponse({
-    status: 501,
-    description: 'Cloud upload not implemented yet',
+    status: 500,
+    description: 'Failed to upload backup to cloud storage',
   })
   async uploadToCloud(@Param('id', ParseIntPipe) id: number): Promise<BackupResponseDto> {
     return await this.backupService.uploadToCloud(id);
