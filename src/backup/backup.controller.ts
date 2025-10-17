@@ -16,21 +16,28 @@ import { CreateBackupDto, BackupResponseDto } from './dto';
 import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
+import { Roles } from '../auth/decorators';
 import { createReadStream } from 'fs';
 
 @ApiTags('backups')
 @ApiBearerAuth()
-@UseGuards(AuthGuard)
+@UseGuards(AuthGuard, RolesGuard)
+@Roles('admin')
 @Controller('backups')
 export class BackupController {
   constructor(private readonly backupService: BackupService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create a new database backup' })
+  @ApiOperation({ summary: 'Create a new database backup (Admin only)' })
   @ApiResponse({
     status: 201,
     description: 'Backup created successfully',
     type: BackupResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
   })
   @ApiResponse({
     status: 500,
@@ -41,22 +48,30 @@ export class BackupController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'Get all backups' })
+  @ApiOperation({ summary: 'Get all backups (Admin only)' })
   @ApiResponse({
     status: 200,
     description: 'List of all backups',
     type: [BackupResponseDto],
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
   })
   async getAllBackups(): Promise<BackupResponseDto[]> {
     return await this.backupService.getAllBackups();
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get backup by ID' })
+  @ApiOperation({ summary: 'Get backup by ID (Admin only)' })
   @ApiResponse({
     status: 200,
     description: 'Backup details',
     type: BackupResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
   })
   @ApiResponse({
     status: 404,
@@ -67,10 +82,14 @@ export class BackupController {
   }
 
   @Get(':id/download')
-  @ApiOperation({ summary: 'Download backup file' })
+  @ApiOperation({ summary: 'Download backup file (Admin only)' })
   @ApiResponse({
     status: 200,
     description: 'Backup file download',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
   })
   @ApiResponse({
     status: 404,
@@ -94,11 +113,15 @@ export class BackupController {
   }
 
   @Post(':id/upload-cloud')
-  @ApiOperation({ summary: 'Upload backup to cloud storage (MinIO)' })
+  @ApiOperation({ summary: 'Upload backup to cloud storage (Admin only)' })
   @ApiResponse({
     status: 200,
     description: 'Backup uploaded to MinIO cloud storage successfully',
     type: BackupResponseDto,
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
   })
   @ApiResponse({
     status: 404,
@@ -113,10 +136,14 @@ export class BackupController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete backup' })
+  @ApiOperation({ summary: 'Delete backup (Admin only)' })
   @ApiResponse({
     status: 200,
     description: 'Backup deleted successfully',
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
   })
   @ApiResponse({
     status: 404,

@@ -9,6 +9,7 @@ The Backup API provides endpoints for creating, managing, and downloading Postgr
 - ✅ Download backup files
 - ✅ Delete backups (file + database record)
 - ✅ Upload to cloud storage (MinIO/S3)
+- 🔒 **Secure error handling** - No sensitive data in error messages
 
 ## Prerequisites
 
@@ -19,11 +20,13 @@ Make sure you have `pg_dump` installed on your system:
 
 ## API Endpoints
 
-### Authentication
-All backup endpoints require authentication. Include the JWT token in the Authorization header:
+### Authentication & Authorization
+All backup endpoints require authentication **AND** admin role. Include the JWT token in the Authorization header:
 ```
 Authorization: Bearer <your-jwt-token>
 ```
+
+**🔒 Admin Only Access**: Only users with `role: "admin"` can access backup endpoints. Non-admin users will receive a `403 Forbidden` response.
 
 ### 1. Create Backup
 **POST** `/backups`
@@ -119,12 +122,45 @@ Deletes both the backup file and database record.
 - **Database Records**: Metadata is stored in the `Backup` table
 - **File Naming**: `backup_YYYY-MM-DD_HH-MM-SS.sql`
 
-## Error Handling
+## Error Handling & Security
 
-The API handles various error scenarios:
+The API implements secure error handling to protect sensitive information:
+
+### 🔒 **Security Features**
+- **No credential exposure**: Database URLs and passwords are never shown in error messages
+- **Sanitized errors**: File paths and sensitive configuration are hidden
+- **User-friendly messages**: Clear, helpful error descriptions without technical details
+- **Secure logging**: Full error details logged server-side for debugging
+
+### **Error Scenarios**
+- **401**: Authentication required (no valid JWT token)
+- **403**: Forbidden - Admin role required (user is authenticated but not admin)
 - **404**: Backup not found
-- **500**: Backup creation failed (database issues, permissions, etc.)
-- **401**: Authentication required
+- **500**: User-friendly error messages (e.g., "Database backup tool is not available")
+
+### **Example Error Responses**
+
+**Non-Admin User (403 Forbidden):**
+```json
+{
+  "statusCode": 403,
+  "timestamp": "2024-10-17T15:30:22.000Z",
+  "path": "/backups",
+  "message": "Access denied. Required role(s): admin. Your role: user"
+}
+```
+
+**Server Error (500):**
+```json
+{
+  "statusCode": 500,
+  "timestamp": "2024-10-17T15:30:22.000Z",
+  "path": "/backups", 
+  "message": "Backup creation failed due to an unexpected error. Please try again or contact support."
+}
+```
+
+**Note**: Detailed error information is logged server-side for developers but never exposed to API clients.
 
 ## MinIO Cloud Storage Integration
 
@@ -218,34 +254,63 @@ Add backup compression support:
 
 ## Complete Workflow Example
 
-Here's a complete example of creating and uploading a backup:
+Here's a complete example of creating and uploading a backup **with admin user**:
 
 ```bash
-# 1. Create a backup
-curl -X POST http://localhost:3000/backups \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+# 1. Login as admin user first
+curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "admin", "password": "admin_password"}'
+
+# Response: {"access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."}
+
+# 2. Create a backup (use the access_token from step 1)
+curl -X POST http://localhost:3001/backups \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"description": "Test backup with MinIO", "type": "full"}'
 
 # Response: {"id": 1, "filename": "backup_2024-10-17_14-30-22.sql", ...}
 
-# 2. Upload to MinIO
-curl -X POST http://localhost:3000/backups/1/upload-cloud \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+# 3. Upload to MinIO
+curl -X POST http://localhost:3001/backups/1/upload-cloud \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
 
 # Response: {..., "cloudUrl": "http://localhost:9000/...", ...}
 
-# 3. List all backups (see cloud URLs)
-curl -X GET http://localhost:3000/backups \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+# 4. List all backups (see cloud URLs)
+curl -X GET http://localhost:3001/backups \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN"
 
-# 4. Download from local storage
-curl -X GET http://localhost:3000/backups/1/download \
-  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+# 5. Download from local storage
+curl -X GET http://localhost:3001/backups/1/download \
+  -H "Authorization: Bearer YOUR_ADMIN_JWT_TOKEN" \
   -o backup.sql
 
-# 5. Access from MinIO directly using the cloudUrl from step 2
+# 6. Access from MinIO directly using the cloudUrl from step 3
 # The presigned URL allows direct download from MinIO
+```
+
+### **Non-Admin User Example (Will Fail)**
+```bash
+# Login as regular user
+curl -X POST http://localhost:3001/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username": "regular_user", "password": "user_password"}'
+
+# Try to create backup (will fail with 403)
+curl -X POST http://localhost:3001/backups \
+  -H "Authorization: Bearer USER_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"description": "This will fail"}'
+
+# Response: 
+# {
+#   "statusCode": 403,
+#   "message": "Access denied. Required role(s): admin. Your role: user",
+#   "timestamp": "2024-10-17T15:30:22.000Z",
+#   "path": "/backups"
+# }
 ```
 
 ## Testing

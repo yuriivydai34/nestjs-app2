@@ -6,6 +6,7 @@ import { promisify } from 'util';
 import { existsSync, mkdirSync, statSync, createReadStream, unlinkSync } from 'fs';
 import { join } from 'path';
 import * as Minio from 'minio';
+import { ErrorSanitizer } from '../utils/error-sanitizer';
 
 const execAsync = promisify(exec);
 
@@ -63,7 +64,9 @@ export class BackupService {
 
       this.logger.log(`Starting backup creation: ${filename}`);
       
-      const command = `pg_dump "${databaseUrl}" > "${filepath}"`;
+      // Remove Prisma-specific parameters that pg_dump doesn't understand
+      const cleanDatabaseUrl = databaseUrl.split('?')[0];
+      const command = `pg_dump "${cleanDatabaseUrl}" > "${filepath}"`;
       await execAsync(command);
 
       // Get file size
@@ -83,7 +86,13 @@ export class BackupService {
 
       return this.mapToResponseDto(updatedBackup);
     } catch (error) {
-      this.logger.error(`Failed to create backup: ${error.message}`);
+      // Log full error details for debugging (in secure logs)
+      this.logger.error(`[BACKUP_CREATE] Full error details for debugging:
+        Message: ${error.message}
+        Stack: ${error.stack || 'No stack trace'}
+        Filename: ${filename}
+        Timestamp: ${new Date().toISOString()}
+      `);
       
       // Update backup status to failed if record was created
       try {
@@ -92,10 +101,12 @@ export class BackupService {
           data: { status: 'failed' },
         });
       } catch (updateError) {
-        this.logger.error(`Failed to update backup status: ${updateError.message}`);
+        this.logger.error(`Failed to update backup status: ${ErrorSanitizer.sanitizeErrorMessage(updateError)}`);
       }
 
-      throw new InternalServerErrorException(`Failed to create backup: ${error.message}`);
+      // Return sanitized error message to user
+      const userFriendlyMessage = ErrorSanitizer.getUserFriendlyMessage(error, 'Backup creation');
+      throw new InternalServerErrorException(userFriendlyMessage);
     }
   }
 
@@ -147,8 +158,18 @@ export class BackupService {
 
       this.logger.log(`Backup deleted successfully: ${backup.filename}`);
     } catch (error) {
-      this.logger.error(`Failed to delete backup: ${error.message}`);
-      throw new InternalServerErrorException(`Failed to delete backup: ${error.message}`);
+      // Log full error details for debugging
+      this.logger.error(`[BACKUP_DELETE] Full error details for debugging:
+        Message: ${error.message}
+        Stack: ${error.stack || 'No stack trace'}
+        Backup ID: ${id}
+        Filename: ${backup.filename}
+        Timestamp: ${new Date().toISOString()}
+      `);
+      
+      // Return sanitized error message to user
+      const userFriendlyMessage = ErrorSanitizer.getUserFriendlyMessage(error, 'Backup deletion');
+      throw new InternalServerErrorException(userFriendlyMessage);
     }
   }
 
@@ -173,7 +194,9 @@ export class BackupService {
         this.logger.log(`Created MinIO bucket: ${this.minioBucket}`);
       }
     } catch (error) {
-      this.logger.warn(`Failed to ensure bucket exists: ${error.message}`);
+      // Log sanitized error message for MinIO connection issues
+      const sanitizedMessage = ErrorSanitizer.sanitizeErrorMessage(error);
+      this.logger.warn(`Failed to ensure bucket exists: ${sanitizedMessage}`);
     }
   }
 
@@ -208,8 +231,18 @@ export class BackupService {
       this.logger.log(`Backup uploaded to cloud successfully: ${backup.filename}`);
       return this.mapToResponseDto(updatedBackup);
     } catch (error) {
-      this.logger.error(`Failed to upload backup to cloud: ${error.message}`);
-      throw new InternalServerErrorException(`Failed to upload backup to cloud: ${error.message}`);
+      // Log full error details for debugging
+      this.logger.error(`[CLOUD_UPLOAD] Full error details for debugging:
+        Message: ${error.message}
+        Stack: ${error.stack || 'No stack trace'}
+        Backup ID: ${id}
+        Filename: ${backup.filename}
+        Timestamp: ${new Date().toISOString()}
+      `);
+      
+      // Return sanitized error message to user
+      const userFriendlyMessage = ErrorSanitizer.getUserFriendlyMessage(error, 'Cloud upload');
+      throw new InternalServerErrorException(userFriendlyMessage);
     }
   }
 }

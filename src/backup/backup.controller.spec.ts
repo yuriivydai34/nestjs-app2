@@ -1,6 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { BackupController } from './backup.controller';
 import { BackupService } from './backup.service';
+import { ForbiddenException } from '@nestjs/common';
+import { RolesGuard } from '../auth/roles.guard';
+import { Reflector } from '@nestjs/core';
 
 describe('BackupController', () => {
   let controller: BackupController;
@@ -21,6 +24,8 @@ describe('BackupController', () => {
             deleteBackup: jest.fn(),
           },
         },
+        RolesGuard,
+        Reflector,
       ],
     }).compile();
 
@@ -32,5 +37,14 @@ describe('BackupController', () => {
     expect(controller).toBeDefined();
   });
 
-  // TODO: Add more specific tests for backup endpoints
+  describe('Role-based Access Control', () => {
+    it('should require admin role for backup operations', () => {
+      // The @Roles('admin') decorator should be applied to the controller
+      // This ensures all backup endpoints require admin role
+      const rolesMetadata = Reflect.getMetadata('roles', BackupController);
+      expect(rolesMetadata).toEqual(['admin']);
+    });
+  });
+
+  // TODO: Add more specific tests for backup endpoints with role mocking
 });
