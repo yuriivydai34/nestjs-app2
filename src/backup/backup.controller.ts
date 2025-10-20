@@ -12,7 +12,7 @@ import {
   HttpException,
 } from '@nestjs/common';
 import { BackupService } from './backup.service';
-import { CreateBackupDto, BackupResponseDto } from './dto';
+import { CreateBackupDto, BackupResponseDto, RestoreBackupResponseDto } from './dto';
 import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthGuard } from '../auth/auth.guard';
@@ -133,6 +133,29 @@ export class BackupController {
   })
   async uploadToCloud(@Param('id', ParseIntPipe) id: number): Promise<BackupResponseDto> {
     return await this.backupService.uploadToCloud(id);
+  }
+
+  @Post(':id/restore')
+  @ApiOperation({ summary: 'Restore database from backup (Admin only)' })
+  @ApiResponse({
+    status: 200,
+    description: 'Database restored successfully from backup',
+    type: RestoreBackupResponseDto
+  })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden - Admin role required',
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Backup not found',
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Failed to restore database from backup',
+  })
+  async restoreBackup(@Param('id', ParseIntPipe) id: number): Promise<RestoreBackupResponseDto> {
+    return await this.backupService.restoreBackup(id);
   }
 
   @Delete(':id')
