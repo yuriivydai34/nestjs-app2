@@ -125,35 +125,34 @@ export class BackupController {
   })
   @ApiResponse({
     status: 404,
-    description: 'Backup or backup file not found',
+    description: 'Backup not found in cloud storage',
   })
   @ApiResponse({
     status: 500,
-    description: 'Failed to upload backup to cloud storage',
+    description: 'Failed to refresh cloud URL',
   })
   async uploadToCloud(@Param('id', ParseIntPipe) id: number): Promise<BackupResponseDto> {
     return await this.backupService.uploadToCloud(id);
   }
 
+    @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
+  @Post(':id/refresh-url')
+  @ApiOperation({ summary: 'Refresh expired cloud URL for a backup' })
+  @ApiResponse({ status: 200, description: 'Cloud URL refreshed successfully', type: BackupResponseDto })
+  @ApiResponse({ status: 404, description: 'Backup not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
+  async refreshCloudUrl(@Param('id', ParseIntPipe) id: number): Promise<BackupResponseDto> {
+    return await this.backupService.getBackupById(id); // This will auto-refresh if expired
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles('admin')
   @Post(':id/restore')
-  @ApiOperation({ summary: 'Restore database from backup (Admin only)' })
-  @ApiResponse({
-    status: 200,
-    description: 'Database restored successfully from backup',
-    type: RestoreBackupResponseDto
-  })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden - Admin role required',
-  })
-  @ApiResponse({
-    status: 404,
-    description: 'Backup not found',
-  })
-  @ApiResponse({
-    status: 500,
-    description: 'Failed to restore database from backup',
-  })
+  @ApiOperation({ summary: 'Restore database from backup' })
+  @ApiResponse({ status: 200, description: 'Database restored successfully', type: RestoreBackupResponseDto })
+  @ApiResponse({ status: 404, description: 'Backup not found' })
+  @ApiResponse({ status: 500, description: 'Restore failed' })
   async restoreBackup(@Param('id', ParseIntPipe) id: number): Promise<RestoreBackupResponseDto> {
     return await this.backupService.restoreBackup(id);
   }

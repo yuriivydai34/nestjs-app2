@@ -1,12 +1,13 @@
 import { Injectable, NotFoundException, InternalServerErrorException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma.service';
 import { CreateBackupDto, BackupResponseDto, RestoreBackupResponseDto } from './dto';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import { existsSync, mkdirSync, statSync, createReadStream, unlinkSync } from 'fs';
 import { join } from 'path';
 import * as Minio from 'minio';
 import { ErrorSanitizer } from '../utils/error-sanitizer';
+import { PassThrough } from 'stream';
 
 const execAsync = promisify(exec);
 
@@ -42,7 +43,6 @@ export class BackupService {
     // Generate filename with timestamp
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').replace('T', '_').split('.')[0];
     const filename = `backup_${timestamp}.sql`;
-    const filepath = join(this.backupDir, filename);
 
     try {
       // Create backup record in database first
@@ -56,33 +56,78 @@ export class BackupService {
         },
       });
 
-      // Execute pg_dump command
+      // Get database URL
       const databaseUrl = process.env.DATABASE_URL;
       if (!databaseUrl) {
         throw new Error('DATABASE_URL environment variable is not set');
       }
 
-      this.logger.log(`Starting backup creation: ${filename}`);
+      this.logger.log(`Starting backup creation and cloud upload: ${filename}`);
       
       // Remove Prisma-specific parameters that pg_dump doesn't understand
       const cleanDatabaseUrl = databaseUrl.split('?')[0];
-      const command = `pg_dump "${cleanDatabaseUrl}" > "${filepath}"`;
-      await execAsync(command);
+      
+      // Create a PassThrough stream to capture pg_dump output
+      const stream = new PassThrough();
+      let totalSize = 0;
+      
+      // Track the size of data flowing through the stream
+      stream.on('data', (chunk) => {
+        totalSize += chunk.length;
+      });
 
-      // Get file size
-      const stats = statSync(filepath);
-      const fileSize = stats.size;
+      // Spawn pg_dump process and pipe output to stream
+      const pgDumpProcess = spawn('pg_dump', [cleanDatabaseUrl], {
+        stdio: ['ignore', 'pipe', 'pipe']
+      });
 
-      // Update backup record with size and status
+      // Handle pg_dump errors
+      pgDumpProcess.stderr.on('data', (data) => {
+        this.logger.error(`pg_dump stderr: ${data}`);
+      });
+
+      // Pipe pg_dump output to our stream
+      pgDumpProcess.stdout.pipe(stream);
+
+      // Upload stream directly to MinIO
+      const objectName = `backups/${filename}`;
+      
+      // Start upload to MinIO while pg_dump is running
+      const uploadPromise = this.minioClient.putObject(this.minioBucket, objectName, stream);
+      
+      // Wait for both pg_dump to finish and upload to complete
+      await Promise.all([
+        new Promise((resolve, reject) => {
+          pgDumpProcess.on('close', (code) => {
+            if (code !== 0) {
+              reject(new Error(`pg_dump process exited with code ${code}`));
+            } else {
+              resolve(void 0);
+            }
+          });
+          pgDumpProcess.on('error', reject);
+        }),
+        uploadPromise
+      ]);
+
+      // Generate presigned URL for access (valid for 7 days - MinIO limit)
+      const cloudUrl = await this.minioClient.presignedGetObject(
+        this.minioBucket, 
+        objectName, 
+        7 * 24 * 60 * 60 // 7 days in seconds (MinIO maximum)
+      );
+
+      // Update backup record with size, status, and cloud URL
       const updatedBackup = await this.prisma.backup.update({
         where: { id: backup.id },
         data: {
-          size: fileSize,
+          size: totalSize,
           status: 'completed',
+          cloudUrl,
         },
       });
 
-      this.logger.log(`Backup created successfully: ${filename} (${fileSize} bytes)`);
+      this.logger.log(`Backup created and uploaded to cloud successfully: ${filename} (${totalSize} bytes)`);
 
       return this.mapToResponseDto(updatedBackup);
     } catch (error) {
@@ -115,7 +160,24 @@ export class BackupService {
       orderBy: { createdAt: 'desc' },
     });
 
-    return backups.map(backup => this.mapToResponseDto(backup));
+    // Check and refresh expired cloudUrls
+    const refreshedBackups = await Promise.all(
+      backups.map(async (backup) => {
+        if (backup.cloudUrl && this.isCloudUrlExpired(backup.cloudUrl)) {
+          this.logger.log(`Refreshing expired cloudUrl for backup: ${backup.filename}`);
+          try {
+            const newCloudUrl = await this.refreshCloudUrl(backup.id);
+            return { ...backup, cloudUrl: newCloudUrl };
+          } catch (error) {
+            this.logger.warn(`Failed to refresh cloudUrl for ${backup.filename}: ${ErrorSanitizer.sanitizeErrorMessage(error)}`);
+            return backup;
+          }
+        }
+        return backup;
+      })
+    );
+
+    return refreshedBackups.map(backup => this.mapToResponseDto(backup));
   }
 
   async getBackupById(id: number): Promise<BackupResponseDto> {
@@ -127,15 +189,32 @@ export class BackupService {
       throw new NotFoundException(`Backup with ID ${id} not found`);
     }
 
+    // Check if cloudUrl is expired and refresh if needed
+    if (backup.cloudUrl && this.isCloudUrlExpired(backup.cloudUrl)) {
+      this.logger.log(`Refreshing expired cloudUrl for backup: ${backup.filename}`);
+      try {
+        const newCloudUrl = await this.refreshCloudUrl(backup.id);
+        backup.cloudUrl = newCloudUrl;
+      } catch (error) {
+        this.logger.warn(`Failed to refresh cloudUrl for ${backup.filename}: ${ErrorSanitizer.sanitizeErrorMessage(error)}`);
+      }
+    }
+
     return this.mapToResponseDto(backup);
   }
 
   async downloadBackup(id: number): Promise<{ filepath: string; filename: string }> {
     const backup = await this.getBackupById(id);
-    const filepath = join(this.backupDir, backup.filename);
+    let filepath = join(this.backupDir, backup.filename);
+
+    // If backup file doesn't exist locally but has cloud URL, download it first
+    if (!existsSync(filepath) && backup.cloudUrl) {
+      this.logger.log(`Backup file not found locally, downloading from cloud: ${backup.filename}`);
+      filepath = await this.downloadFromCloud(backup);
+    }
 
     if (!existsSync(filepath)) {
-      throw new NotFoundException(`Backup file not found: ${backup.filename}`);
+      throw new NotFoundException(`Backup file not found locally or in cloud: ${backup.filename}`);
     }
 
     return { filepath, filename: backup.filename };
@@ -144,11 +223,22 @@ export class BackupService {
   async deleteBackup(id: number): Promise<void> {
     const backup = await this.getBackupById(id);
     const filepath = join(this.backupDir, backup.filename);
+    const objectName = `backups/${backup.filename}`;
 
     try {
-      // Delete file if exists
+      // Delete local file if exists
       if (existsSync(filepath)) {
         unlinkSync(filepath);
+        this.logger.log(`Local backup file deleted: ${backup.filename}`);
+      }
+
+      // Delete from cloud storage if it exists
+      try {
+        await this.minioClient.removeObject(this.minioBucket, objectName);
+        this.logger.log(`Cloud backup file deleted: ${objectName}`);
+      } catch (cloudError) {
+        // Log but don't fail if cloud file doesn't exist or can't be deleted
+        this.logger.warn(`Could not delete cloud backup file (may not exist): ${ErrorSanitizer.sanitizeErrorMessage(cloudError)}`);
       }
 
       // Delete database record
@@ -202,37 +292,39 @@ export class BackupService {
 
   async uploadToCloud(id: number): Promise<BackupResponseDto> {
     const backup = await this.getBackupById(id);
-    const filepath = join(this.backupDir, backup.filename);
 
-    if (!existsSync(filepath)) {
-      throw new NotFoundException(`Backup file not found: ${backup.filename}`);
-    }
-
+    // For new backups created after this update, they're already in cloud storage
+    // This method now just refreshes the presigned URL
     try {
-      this.logger.log(`Starting cloud upload for backup: ${backup.filename}`);
+      this.logger.log(`Refreshing cloud URL for backup: ${backup.filename}`);
 
-      // Upload file to MinIO
       const objectName = `backups/${backup.filename}`;
-      await this.minioClient.fPutObject(this.minioBucket, objectName, filepath);
+      
+      // Check if file exists in cloud storage
+      try {
+        await this.minioClient.statObject(this.minioBucket, objectName);
+      } catch (statError) {
+        throw new NotFoundException(`Backup file not found in cloud storage: ${backup.filename}`);
+      }
 
-      // Generate presigned URL for access (valid for 30 days for better reliability)
+      // Generate new presigned URL for access (valid for 7 days - MinIO limit)
       const cloudUrl = await this.minioClient.presignedGetObject(
         this.minioBucket, 
         objectName, 
-        30 * 24 * 60 * 60 // 30 days in seconds for better reliability
+        7 * 24 * 60 * 60 // 7 days in seconds (MinIO maximum)
       );
 
-      // Update backup record with cloud URL
+      // Update backup record with new cloud URL
       const updatedBackup = await this.prisma.backup.update({
         where: { id },
         data: { cloudUrl },
       });
 
-      this.logger.log(`Backup uploaded to cloud successfully: ${backup.filename}`);
+      this.logger.log(`Cloud URL refreshed successfully for backup: ${backup.filename}`);
       return this.mapToResponseDto(updatedBackup);
     } catch (error) {
       // Log full error details for debugging
-      this.logger.error(`[CLOUD_UPLOAD] Full error details for debugging:
+      this.logger.error(`[CLOUD_URL_REFRESH] Full error details for debugging:
         Message: ${error.message}
         Stack: ${error.stack || 'No stack trace'}
         Backup ID: ${id}
@@ -241,7 +333,7 @@ export class BackupService {
       `);
       
       // Return sanitized error message to user
-      const userFriendlyMessage = ErrorSanitizer.getUserFriendlyMessage(error, 'Cloud upload');
+      const userFriendlyMessage = ErrorSanitizer.getUserFriendlyMessage(error, 'Cloud URL refresh');
       throw new InternalServerErrorException(userFriendlyMessage);
     }
   }
@@ -271,6 +363,12 @@ export class BackupService {
     // Save backup list to local JSON file with better validation
     const backupListFile = join(this.backupDir, 'backup_list_temp.json');
     try {
+      // Add debugging for what we're saving
+      this.logger.log(`Backups with cloudUrl: ${currentBackups.filter(b => b.cloudUrl).length}/${currentBackups.length}`);
+      currentBackups.forEach((backup, index) => {
+        this.logger.log(`  ${index + 1}. ${backup.filename} - cloudUrl: ${backup.cloudUrl ? 'YES' : 'NO'} - size: ${backup.size}`);
+      });
+
       const backupData = JSON.stringify(currentBackups, null, 2);
       const fs = require('fs');
       fs.writeFileSync(backupListFile, backupData);
@@ -491,8 +589,8 @@ export class BackupService {
               // Ensure dates are properly formatted
               createdAt: new Date(backupData.createdAt),
               updatedAt: new Date(backupData.updatedAt),
-              // Validate cloudUrl - only keep if it's a valid string
-              cloudUrl: (typeof backupData.cloudUrl === 'string' && backupData.cloudUrl.length > 0) ? backupData.cloudUrl : null,
+              // Preserve cloudUrl - only clear if explicitly null/undefined
+              cloudUrl: backupData.cloudUrl || null,
               // Ensure status is valid
               status: ['in_progress', 'completed', 'failed'].includes(backupData.status) ? backupData.status : 'completed',
               // Ensure type is valid
@@ -500,6 +598,13 @@ export class BackupService {
               // Ensure description is not null
               description: backupData.description || 'Restored backup'
             };
+
+            // Debug logging for cloudUrl preservation
+            if (backupData.cloudUrl) {
+              this.logger.log(`Preserving cloudUrl for ${backupData.filename}: ${backupData.cloudUrl.substring(0, 50)}...`);
+            } else {
+              this.logger.log(`No cloudUrl for ${backupData.filename}`);
+            }
 
             const restored = await this.prisma.backup.create({
               data: cleanedBackupData
@@ -518,11 +623,11 @@ export class BackupService {
                 where: { id: existingBackup.id },
                 data: {
                   size: backupData.size,
-                  cloudUrl: (typeof backupData.cloudUrl === 'string' && backupData.cloudUrl.length > 0) ? backupData.cloudUrl : null,
+                  cloudUrl: backupData.cloudUrl || null,
                   status: ['in_progress', 'completed', 'failed'].includes(backupData.status) ? backupData.status : 'completed'
                 }
               });
-              this.logger.log(`🔧 Updated existing backup with correct metadata`);
+              this.logger.log(`🔧 Updated existing backup with correct metadata: size=${backupData.size}, cloudUrl=${backupData.cloudUrl ? 'present' : 'null'}`);
             }
             
             skippedCount++;
@@ -544,6 +649,80 @@ export class BackupService {
       this.logger.error(`Error details: ${error.message}`);
       this.logger.error(`Stack trace: ${error.stack}`);
       // Don't throw here - we want the main restore to succeed even if backup list restore fails
+    }
+  }
+
+  // Helper method to check if cloudUrl is expired or will expire soon
+  private isCloudUrlExpired(cloudUrl: string): boolean {
+    if (!cloudUrl) return false;
+    
+    try {
+      const url = new URL(cloudUrl);
+      const expires = url.searchParams.get('X-Amz-Expires');
+      const signatureDate = url.searchParams.get('X-Amz-Date');
+      
+      if (expires && signatureDate) {
+        // Parse the signature date (format: 20251020T122259Z)
+        const year = parseInt(signatureDate.substring(0, 4));
+        const month = parseInt(signatureDate.substring(4, 6)) - 1; // Month is 0-indexed
+        const day = parseInt(signatureDate.substring(6, 8));
+        const hour = parseInt(signatureDate.substring(9, 11));
+        const minute = parseInt(signatureDate.substring(11, 13));
+        const second = parseInt(signatureDate.substring(13, 15));
+        
+        const sigDate = new Date(year, month, day, hour, minute, second);
+        const expiryTime = sigDate.getTime() + (parseInt(expires) * 1000);
+        const now = Date.now();
+        
+        // Consider expired if it expires within 1 hour
+        return (expiryTime - now) < (60 * 60 * 1000);
+      }
+    } catch (error) {
+      this.logger.warn(`Error checking cloud URL expiry: ${ErrorSanitizer.sanitizeErrorMessage(error)}`);
+    }
+    
+    return false; // If we can't determine, assume it's not expired
+  }
+
+  // Helper method to refresh an expired cloudUrl
+  private async refreshCloudUrl(backupId: number): Promise<string | null> {
+    try {
+      const backup = await this.prisma.backup.findUnique({
+        where: { id: backupId }
+      });
+
+      if (!backup) {
+        return null;
+      }
+
+      const objectName = `backups/${backup.filename}`;
+      
+      // Check if file exists in cloud storage
+      try {
+        await this.minioClient.statObject(this.minioBucket, objectName);
+      } catch (error) {
+        this.logger.warn(`File not found in cloud storage: ${objectName}`);
+        return null;
+      }
+
+      // Generate new presigned URL
+      const newCloudUrl = await this.minioClient.presignedGetObject(
+        this.minioBucket, 
+        objectName, 
+        7 * 24 * 60 * 60 // 7 days (MinIO maximum)
+      );
+
+      // Update backup record with new URL
+      await this.prisma.backup.update({
+        where: { id: backupId },
+        data: { cloudUrl: newCloudUrl }
+      });
+
+      this.logger.log(`Refreshed cloud URL for backup: ${backup.filename}`);
+      return newCloudUrl;
+    } catch (error) {
+      this.logger.error(`Failed to refresh cloud URL: ${ErrorSanitizer.sanitizeErrorMessage(error)}`);
+      return null;
     }
   }
 }
