@@ -12,8 +12,16 @@ import { diskStorage } from 'multer';
       storage: diskStorage({
         destination: './upload',
         filename: (req, file, cb) => {
-          const randomName = Array(32).fill(null).map(() => (Math.round(Math.random() * 16)).toString(16)).join('');
-          cb(null, `${randomName}${extname(file.originalname)}`);
+          // Properly decode the original filename to handle Unicode characters
+          const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+          const timestamp = Date.now();
+          const randomSuffix = Math.round(Math.random() * 1000);
+          const ext = extname(originalName);
+          const nameWithoutExt = originalName.replace(ext, '');
+          
+          // Create a safe filename while preserving the original name structure
+          const safeFilename = `${timestamp}_${randomSuffix}_${nameWithoutExt}${ext}`;
+          cb(null, safeFilename);
         },
       }),
     }),

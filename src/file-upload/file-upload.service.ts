@@ -23,23 +23,17 @@ export class FileUploadService {
       throw new Error('No file uploaded');
     }
 
+    // Properly decode the original filename to handle Unicode characters
+    const originalName = Buffer.from(file.originalname, 'latin1').toString('utf8');
+
     // If using diskStorage (which you are), the file is already saved to disk
     // and file.path contains the path to the saved file
     if (file.path) {
-      // Use the original filename (with Cyrillic) for both DB and disk
-      const uploadDir = path.dirname(file.path);
-      const originalFilePath = path.join(uploadDir, file.originalname);
-
-      // If the file was saved with a different name, rename it to the original
-      if (file.path !== originalFilePath) {
-        fs.renameSync(file.path, originalFilePath);
-      }
-
       await this.prisma.file.create({
         data: {
-          filename: file.originalname, // Preserve original (Cyrillic) filename
-          url: originalFilePath,
-          originalName: file.originalname,
+          filename: originalName, // Use properly decoded filename
+          url: file.path, // Keep the actual file path on disk
+          originalName: originalName,
           size: file.size,
           mimetype: file.mimetype,
         },
@@ -48,11 +42,11 @@ export class FileUploadService {
       return {
         message: 'File uploaded successfully',
         data: {
-          filename: file.originalname,
-          originalName: file.originalname,
+          filename: originalName,
+          originalName: originalName,
           size: file.size,
           mimetype: file.mimetype,
-          url: originalFilePath,
+          url: file.path,
           uploadDate: new Date(),
         }
       };
@@ -66,14 +60,24 @@ export class FileUploadService {
         fs.mkdirSync(uploadDir, { recursive: true });
       }
 
-      const filePath = path.join(uploadDir, file.originalname);
+      const filePath = path.join(uploadDir, originalName);
       await fs.promises.writeFile(filePath, file.buffer);
+
+      await this.prisma.file.create({
+        data: {
+          filename: originalName,
+          url: filePath,
+          originalName: originalName,
+          size: file.size,
+          mimetype: file.mimetype,
+        },
+      });
 
       return {
         message: 'File saved successfully',
         data: {
-          filename: filePath.split('upload/')[1],
-          originalName: file.originalname,
+          filename: originalName,
+          originalName: originalName,
           size: file.size,
           mimetype: file.mimetype,
           url: filePath,
