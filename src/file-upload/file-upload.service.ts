@@ -115,17 +115,25 @@ export class FileUploadService {
       throw new Error(`File with ID ${id} not found`);
     }
 
-    // Delete the file from the filesystem
-    const filePath = path.join('./upload', file.filename);
+    // Use the actual file path stored in the database (file.url)
+    // instead of constructing it from the filename
+    const filePath = file.url;
+    console.log(`Attempting to delete file at path: ${filePath}`);
+    
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
+      console.log(`Successfully deleted file: ${filePath}`);
     } else {
-      throw new Error(`File not found on disk: ${filePath}`);
+      console.warn(`File not found on disk (may have been manually deleted): ${filePath}`);
+      // Don't throw an error - just log a warning and continue with DB cleanup
     }
 
     // Delete the file record from the database
     await this.prisma.file.delete({ where: { id } });
 
-    return { message: 'File deleted successfully' };
+    return {
+      message: 'File deleted successfully',
+      filename: file.filename
+    };
   }
 }
