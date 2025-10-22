@@ -48,15 +48,32 @@ export class ChatRoomService {
     throw new Error('Not implemented yet');
   }
 
-  addMembers(roomId: string, userIds: number[]) {
-    // return this.prisma.chatRoom.update({
-    //   where: { id: roomId },
-    //   data: {
-    //     members: {
-    //       connect: userIds.map(id => ({ id })),
-    //     },
-    //   },
-    // });
-    throw new Error('Not implemented yet');
+  async findUserRooms(userId: number) {
+    return this.prisma.chatRoom.findMany({
+      where: {
+        members: {
+          has: userId
+        }
+      }
+    });
+  }
+
+  async addMembers(roomId: string, userIds: number[]) {
+    const room = await this.prisma.chatRoom.findUnique({
+      where: { id: roomId }
+    });
+    
+    if (!room) {
+      throw new Error('Room not found');
+    }
+
+    const updatedMembers = [...new Set([...room.members, ...userIds])];
+    
+    return this.prisma.chatRoom.update({
+      where: { id: roomId },
+      data: {
+        members: updatedMembers
+      }
+    });
   }
 }

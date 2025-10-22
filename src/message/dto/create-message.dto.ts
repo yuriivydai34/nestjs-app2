@@ -1,6 +1,6 @@
 export class CreateMessageDto {
     content: string;
-    receiverId: number;
+    receiverId?: number;
     senderId: number;
     roomId?: string;
     files?: number[];

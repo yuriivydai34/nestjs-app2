@@ -13,6 +13,8 @@ import { MessageModule } from './message/message.module';
 import { NotificationModule } from './notification/notification.module';
 import { ChatGateway } from './gateways/chat/chat.gateway';
 import { MessageService } from './message/message.service';
+import { ChatRoomService } from './chat-room/chat-room.service';
+import { UsersService } from './users/users.service';
 import { PrismaService } from './prisma.service';
 import { TaskTemplateModule } from './task-template/task-template.module';
 import { TaskChecklistsModule } from './task-checklists/task-checklists.module';
@@ -37,6 +39,6 @@ import { ChatRoomModule } from './chat-room/chat-room.module';
     ChatRoomModule
   ],
   controllers: [AppController],
-  providers: [AppService, MessageService, PrismaService, ChatGateway],
+  providers: [AppService, MessageService, ChatRoomService, UsersService, PrismaService, ChatGateway],
 })
 export class AppModule { }

@@ -8,6 +8,8 @@ import * as bcrypt from 'bcrypt';
 export interface UserInterface {
   id: number;
   username: string;
+  role?: string;
+  status?: string;
   UserProfile: {
     name: string;
     email: string;
@@ -66,6 +68,7 @@ export class UsersService {
         id: true,
         username: true,
         role: true,
+        status: true,
         UserProfile: {
           select: {
             name: true,
@@ -80,8 +83,18 @@ export class UsersService {
     return users.map(user => ({
       id: user.id,
       username: user.username,
-      role: user.role,
+      role: user.role || undefined,
+      status: user.status || undefined,
       UserProfile: user.UserProfile
     }));
+  }
+
+  async updateUserStatus(userId: number, status: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { 
+        status
+      }
+    });
   }
 }

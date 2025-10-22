@@ -65,4 +65,14 @@ export class MessageService {
       data: { isRead },
     });
   }
+
+  async markAsRead(messageIds: number[], userId: number) {
+    return this.prisma.message.updateMany({
+      where: { 
+        id: { in: messageIds },
+        receiverId: userId // Only allow users to mark messages sent to them as read
+      },
+      data: { isRead: true },
+    });
+  }
 }
