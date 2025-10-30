@@ -26,7 +26,7 @@ import { createReadStream } from 'fs';
 @Roles('admin')
 @Controller('backups')
 export class BackupController {
-  constructor(private readonly backupService: BackupService) {}
+  constructor(private readonly backupService: BackupService) { }
 
   @Post()
   @ApiOperation({ summary: 'Create a new database backup (Admin only)' })
@@ -101,10 +101,10 @@ export class BackupController {
   ): Promise<void> {
     try {
       const { filepath, filename } = await this.backupService.downloadBackup(id);
-      
+
       res.setHeader('Content-Type', 'application/sql');
       res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      
+
       const fileStream = createReadStream(filepath);
       fileStream.pipe(res);
     } catch (error) {
@@ -112,7 +112,7 @@ export class BackupController {
     }
   }
 
-    @UseGuards(AuthGuard, RolesGuard)
+  @UseGuards(AuthGuard, RolesGuard)
   @Roles('admin')
   @Post(':id/restore')
   @ApiOperation({ summary: 'Restore database from backup' })
