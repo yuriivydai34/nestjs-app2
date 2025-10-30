@@ -132,3 +132,15 @@ model TaskChecklist {
 
   checklistItems CheckListItem[]
 }
+
+model Backup {
+  id          Int      @id @default(autoincrement())
+  filename    String   @unique
+  description String?
+  size        Int      @default(0)
+  type        String   @default("full")
+  status      String   @default("in_progress") // in_progress, completed, failed
+  url         String   // URL for storage location
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
